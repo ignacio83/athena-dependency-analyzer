@@ -22,6 +22,9 @@ services:
     links:
       - "rabbitmq"
       - "mongo"
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
     environment:
       - MONGO_URI=mongodb://mongo:27017/athena
       - RABBITMQ_ADDRESSES=rabbitmq:5672
