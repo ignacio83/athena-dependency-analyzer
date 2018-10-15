@@ -44,6 +44,7 @@ public class ArtifactsController {
       @ApiParam(value = "Version") @RequestParam(required = false) Optional<String> version) {
 
     String teste = null;
+    String teste2 = "";
 
     return getArtifactsUsage
         .all(
