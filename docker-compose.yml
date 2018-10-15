@@ -11,6 +11,9 @@ services:
     image: rabbitmq:3.7.7-management-alpine
     ports:
       - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=athena
 
   athena:
     image: netshoes/athena-dependency-analyzer
@@ -19,9 +22,15 @@ services:
     links:
       - "rabbitmq"
       - "mongo"
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
     environment:
       - MONGO_URI=mongodb://mongo:27017/athena
       - RABBITMQ_ADDRESSES=rabbitmq:5672
+      - RABBITMQ_HOST=athena
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
       - GITHUB_HOST=$GITHUB_HOST
       - GITHUB_ORGANIZATION=$GITHUB_ORGANIZATION
       - GITHUB_TOKEN=$GITHUB_TOKEN
