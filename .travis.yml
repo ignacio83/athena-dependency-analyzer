@@ -19,17 +19,10 @@ env:
     - secure: "OGvYAp0bi2BZSWut5+SkO/lf1cwk1yNQ5gCgummBApoln81EFT988wO1WP3dmd/ba8TDe3WBQn2uCUqFp8rJH7QgfyzDNcbdyLn3i7A2LQRIs1N8aagZW/lr2/7jnP5Vd4Bp9adWZ3u3ZmLkEqHX9DYxmVJnVFK2lXtlGzUjx0EcoiopSuzfWnQLQc2BD9yKtEupMPFOCL3VnHNf5wNIVPrK5JukyEO/dW98NRoYozFkq3YW2kN7LheT88hOB0rXVs4/MxJYkpvvyowS2nLwBL4ixDWdJnQkcNM5DATxQPMsA6dL5JUWUpWfzjQdOmWDOUJCDZhQdYR+vBdeWDCzOfsl3nUfx47cUggvn2MUGyaE9bE8IrLMsqwwFqhe9XB7YY/oiaWMyI2XS4Poq1kvClbmS/1+ky9WpsP/a8PorU1YqJFXxBGlK+ivlheroYF8oEEujC47UhywijPbMGaRSfJvJF65S2XQ/sSWYcjSWfVCsdRU4kKJNIfKK11bX+VR8JaPk38zCHftjbAgK/V/Jey8W3wOnDtKkz9QiEwqNB136hJvwpn6qx3oi/ICVfpH360hp4xgdyXCKKr+VjVNrXScCjquF6B8vwh8CRO7F7aFl1QwkMVNP0Yrd+o4lhFNazY0jIok6fx783jJiPHXHRBx/ceFS8mAgVAjfJdNcFY="
     - # ^^ DOCKER_PASSWORD
 
-addons:
-  sonarcloud:
-    organization: "netshoes"
-    token:
-      secure: $SONAR_CLOUD_TOKEN
-
 install:
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -f app/pom.xml
 
 script:
-  - mvn test sonar:sonar -f app/pom.xml
   - mvn test coveralls:report -DrepoToken=$COVERALLS_REPO_TOKEN -B -f app/pom.xml
   - mvn com.gavinmogan:codacy-maven-plugin:coverage -DcoverageReportFile=target/site/jacoco/jacoco.xml -DprojectToken=$CODACY_PROJECT_TOKEN -DapiToken=$CODACY_API_TOKEN -f app/pom.xml
 
