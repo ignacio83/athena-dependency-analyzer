@@ -22,12 +22,10 @@ public class AnalyzeArtifact {
         .map(pattern -> pattern.check(artifact))
         .filter(ArtifactVersionReport::isMatched)
         .singleOrEmpty()
-        .map(report -> logArtifactAnalyzed(artifact, report));
+        .doOnNext(report -> logArtifactAnalyzed(artifact, report));
   }
 
-  private ArtifactVersionReport logArtifactAnalyzed(
-      Artifact artifact, ArtifactVersionReport report) {
+  private void logArtifactAnalyzed(Artifact artifact, ArtifactVersionReport report) {
     log.trace("Artifact {} analyzed. Result {}", artifact, report);
-    return report;
   }
 }

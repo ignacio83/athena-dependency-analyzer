@@ -81,11 +81,7 @@ public class ProjectMongoGateway implements ProjectGateway {
     return Mono.just(project)
         .map(ProjectDoc::new)
         .flatMap(projectRepository::save)
-        .map(
-            doc -> {
-              log.debug("Project {} - {} saved.", doc.getId(), doc.getName());
-              return doc;
-            })
+        .doOnNext(doc -> log.debug("Project {} - {} saved.", doc.getId(), doc.getName()))
         .map(p -> p.toDomain(true));
   }
 }

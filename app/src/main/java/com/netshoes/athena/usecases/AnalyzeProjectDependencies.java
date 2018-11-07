@@ -49,17 +49,17 @@ public class AnalyzeProjectDependencies {
   private Mono<Artifact> analyzeArtifact(Artifact artifact) {
     final Mono<Artifact> discoverTechnologies =
         Mono.just(artifact)
-            .map(this::logStartingAnalyze)
+            .doOnNext(this::logStartingAnalyze)
             .flatMapMany(this::discoverTechnologies)
             .collect(() -> new HashSet<Technology>(), Set::add)
             .map(artifact::addRelatedTechnologies)
-            .map(this::logTechnologiesIfModified);
+            .doOnNext(this::logTechnologiesIfModified);
 
     final Mono<Artifact> analyzeArtifact =
         this.analyzeArtifact
             .execute(artifact)
             .map(artifact::setReport)
-            .map(this::logReportIfModified);
+            .doOnNext(this::logReportIfModified);
 
     return discoverTechnologies.then(analyzeArtifact).switchIfEmpty(discoverTechnologies);
   }
@@ -68,12 +68,11 @@ public class AnalyzeProjectDependencies {
     return Flux.fromIterable(Technology.discover(artifact));
   }
 
-  private Artifact logStartingAnalyze(Artifact artifact) {
+  private void logStartingAnalyze(Artifact artifact) {
     log.trace("Starting analyze of artifact {} ...", artifact);
-    return artifact;
   }
 
-  private Artifact logTechnologiesIfModified(Artifact artifact) {
+  private void logTechnologiesIfModified(Artifact artifact) {
     if (artifact.isModified()) {
       final Set<Technology> relatedTechnologies = artifact.getRelatedTechnologies();
       if (!relatedTechnologies.isEmpty()) {
@@ -83,10 +82,9 @@ public class AnalyzeProjectDependencies {
             relatedTechnologies);
       }
     }
-    return artifact;
   }
 
-  private Artifact logReportIfModified(Artifact artifact) {
+  private void logReportIfModified(Artifact artifact) {
     if (artifact.isModified()) {
       artifact
           .getReport()
@@ -95,6 +93,5 @@ public class AnalyzeProjectDependencies {
                   log.info(
                       "Report generated for artifact {}. Summary: {}", artifact, t.getSummary()));
     }
-    return artifact;
   }
 }

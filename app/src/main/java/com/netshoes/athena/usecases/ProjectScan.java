@@ -104,7 +104,7 @@ public class ProjectScan {
   public Mono<Project> execute(Project project) {
     final Mono<Project> runAnalyses =
         findDependencyManagerDescriptors(project)
-            .map(this::logRepositoryContent)
+            .doOnNext(this::logRepositoryContent)
             .flatMap(this::analyzeContentOnErrorResume)
             .collect(() -> project, Project::addDependencyManagerDescriptor)
             .flatMap(this::saveProjectOnErrorResume)
@@ -130,14 +130,13 @@ public class ProjectScan {
     return p;
   }
 
-  private ScmRepositoryContentData logRepositoryContent(ScmRepositoryContentData data) {
+  private void logRepositoryContent(ScmRepositoryContentData data) {
     if (log.isDebugEnabled()) {
       final ScmRepositoryContent content = data.getScmRepositoryContent();
       final String name = content.getName();
       final String path = content.getPath().equals(name) ? name : content.getPath();
       log.debug("Found {} in {}.", path, content.getRepository().getId());
     }
-    return data;
   }
 
   private Flux<ScmRepositoryContentData> findDependencyManagerDescriptors(Project project) {
@@ -168,19 +167,18 @@ public class ProjectScan {
             },
             MAX_DIRECTORY_DEPTH + 1)
         .filter(this::isValidDescriptor)
-        .map(this::logDescriptorFound)
+        .doOnNext(this::logDescriptorFound)
         .flatMap(scmGateway::retrieveContentData)
         .onErrorResume(CouldNotGetRepositoryContentException.class, exception -> Mono.empty())
         .onErrorMap(
             ScmApiGatewayRateLimitExceededException.class, this::createScmApiRateLimitException);
   }
 
-  private ScmRepositoryContent logDescriptorFound(ScmRepositoryContent descriptor) {
+  private void logDescriptorFound(ScmRepositoryContent descriptor) {
     log.debug(
         "Dependency manager descriptor {} found for {}",
         "".equals(descriptor.getPath()) ? "root" : descriptor.getPath(),
         descriptor.getRepository().getId());
-    return descriptor;
   }
 
   private boolean isValidDescriptor(ScmRepositoryContent content) {
