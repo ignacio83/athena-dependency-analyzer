@@ -3,6 +3,7 @@ package com.netshoes.athena.gateways.github;
 import com.netshoes.athena.conf.GitHubClientProperties;
 import com.netshoes.athena.domains.ContentType;
 import com.netshoes.athena.domains.ScmApiRateLimit;
+import com.netshoes.athena.domains.ScmApiRateLimit.Resource;
 import com.netshoes.athena.domains.ScmApiUser;
 import com.netshoes.athena.domains.ScmRepository;
 import com.netshoes.athena.domains.ScmRepositoryContent;
@@ -42,7 +43,7 @@ import reactor.core.scheduler.Scheduler;
 @AllArgsConstructor
 @Slf4j
 public class GitHubScmGateway implements ScmGateway {
-
+  private static final float FLOAT_ONE = 1f;
   private final GitHubClient gitHubClient;
   private final RepositoryService repositoryService;
   private final ContentsService contentsService;
@@ -52,17 +53,35 @@ public class GitHubScmGateway implements ScmGateway {
 
   @Override
   public Mono<ScmRepository> getRepository(String id) {
-    return Mono.fromCallable(() -> this.getRepositoryBlocking(RepositoryId.createFromId(id)))
+    return this.getRateLimit()
+        .doOnNext(this::throwExceptionIfRateLimitIsNotAvailable)
         .publishOn(githubApiScheduler)
+        .map(rateLimit -> this.getRepositoryBlocking(RepositoryId.createFromId(id)))
         .map(this::toScmRepository);
   }
 
   @Override
   public Flux<ScmRepository> getRepositoriesFromConfiguredOrganization() {
-    return Mono.fromCallable(() -> getRepositoriesFromConfiguredOrganizationBlocking())
+    return this.getRateLimit()
+        .doOnNext(this::throwExceptionIfRateLimitIsNotAvailable)
         .publishOn(githubApiScheduler)
+        .map(rateLimit -> this.getRepositoriesFromConfiguredOrganizationBlocking())
         .flatMapMany(Flux::fromIterable)
         .map(this::toScmRepository);
+  }
+
+  private void throwExceptionIfRateLimitIsNotAvailable(ScmApiRateLimit scmApiRateLimit) {
+    final Resource core = scmApiRateLimit.getCore();
+    core.getConfiguredLimitPercentage()
+        .ifPresent(
+            configuredLimitPercentage -> {
+              final float percentageUsed = core.getPercentageUsed();
+              if (percentageUsed >= FLOAT_ONE) {
+                final OffsetDateTime reset = core.getReset();
+                final long minutesToReset = OffsetDateTime.now().until(reset, ChronoUnit.MINUTES);
+                throw new ScmApiGatewayRateLimitExceededException(minutesToReset);
+              }
+            });
   }
 
   private List<Repository> getRepositoriesFromConfiguredOrganizationBlocking() {
@@ -92,8 +111,13 @@ public class GitHubScmGateway implements ScmGateway {
     if (requestException.getMessage().contains("API rate limit exceeded for")) {
       Long minutesToReset = null;
       try {
-        final ScmApiRateLimit rateLimit = getRateLimitBlocking().toDomain();
-        final OffsetDateTime reset = rateLimit.getRate().getReset();
+        final ScmApiRateLimit rateLimit =
+            getRateLimitBlocking()
+                .toDomain(
+                    gitHubClientProperties.getCore().getRateLimitPercentage(),
+                    gitHubClientProperties.getSearch().getRateLimitPercentage(),
+                    gitHubClientProperties.getGraphql().getRateLimitPercentage());
+        final OffsetDateTime reset = rateLimit.getCore().getReset();
         minutesToReset = OffsetDateTime.now().until(reset, ChronoUnit.MINUTES);
       } catch (ScmApiGetRateLimitException e) {
         log.warn("Unable to get rate limit from GitHub Api", e);
@@ -105,8 +129,9 @@ public class GitHubScmGateway implements ScmGateway {
   @Override
   public Flux<ScmRepositoryContent> getContents(
       ScmRepository repository, String branch, String path) {
-
-    return Mono.just(RepositoryId.createFromId(repository.getId()))
+    return this.getRateLimit()
+        .doOnNext(this::throwExceptionIfRateLimitIsNotAvailable)
+        .map(rateLimit -> RepositoryId.createFromId(repository.getId()))
         .publishOn(githubApiScheduler)
         .map(repositoryId -> getRepositoryContentsBlocking(repositoryId, path, branch))
         .flatMapMany(repositoryContents -> Flux.fromIterable(repositoryContents))
@@ -196,7 +221,12 @@ public class GitHubScmGateway implements ScmGateway {
   public Mono<ScmApiRateLimit> getRateLimit() {
     return Mono.fromCallable(() -> getRateLimitBlocking())
         .publishOn(githubApiScheduler)
-        .map(RateLimitResponseJson::toDomain);
+        .map(
+            scmApiRateLimitJson ->
+                scmApiRateLimitJson.toDomain(
+                    gitHubClientProperties.getCore().getRateLimitPercentage(),
+                    gitHubClientProperties.getSearch().getRateLimitPercentage(),
+                    gitHubClientProperties.getGraphql().getRateLimitPercentage()));
   }
 
   private RateLimitResponseJson getRateLimitBlocking() {

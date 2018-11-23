@@ -23,4 +23,21 @@ public class GitHubClientProperties {
 
   /** Organization in GitHub */
   private String organization;
+
+  /** Configuration for core API */
+  private Resource core;
+
+  /** Configuration for search API */
+  private Resource search;
+
+  /** Configuration for GraphQL API */
+  private Resource graphql;
+
+  @Getter
+  @Setter
+  public static class Resource {
+
+    /** Rate limit in percentage, set 1 for use all available requests */
+    private Float rateLimitPercentage = 0.5f;
+  }
 }

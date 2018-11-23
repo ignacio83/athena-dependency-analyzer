@@ -3,7 +3,6 @@ package com.netshoes.athena.usecases;
 import static br.com.six2six.fixturefactory.Fixture.from;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -65,7 +64,7 @@ public class ProjectScanTest {
     final ScmRepository scmRepository =
         from(ScmRepository.class).gimme(ScmRepositoryTemplateLoader.DEFAULT);
     final ScmApiRateLimit scmApiRateLimit =
-        from(ScmApiRateLimit.class).gimme(ScmApiRateLimitTemplateLoader.REQUESTS_AVAILABLE);
+        from(ScmApiRateLimit.class).gimme(ScmApiRateLimitTemplateLoader.TEN_PERCENT_AVAILABLE_NO_CONFIGURED_LIMIT);
 
     when(projectGateway.findById(eq("NONE"))).thenReturn(Mono.empty());
     when(scmGateway.getRepository(eq(scmRepository.getId()))).thenReturn(Mono.just(scmRepository));

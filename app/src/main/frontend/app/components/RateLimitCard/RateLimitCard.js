@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import {FormattedTime} from 'react-intl';
+import {FormattedNumber, FormattedTime} from "react-intl";
 import {connect} from 'react-redux'
-import * as PropTypes from "proptypes";
+import PropTypes from "prop-types";
 import {getRateLimit} from './RateLimitActions';
 import {bindActionCreators} from 'redux'
 import {Card, Col, Row, Spin} from "antd";
@@ -12,61 +12,70 @@ export class RateLimitCard extends Component {
   }
 
   render() {
-    let rate, core, search, graphql;
-    let resetRateFormatted, resetCoreFormatted;
-    let resetSearchFormatted, resetGraphqlFormatted;
+    let core, search, graphql;
+    let resetCoreFormatted,
+        resetSearchFormatted, resetGraphqlFormatted;
+    let percentageUsedCoreFormatted, percentageUsedSearchFormatted,
+        percentageUsedGraphqlFormatted;
+    let configuredLimitPercentageCoreFormatted,
+        configuredLimitPercentageSearchFormatted,
+        configuredLimitPercentageGraphqlFormatted;
 
     if (this.props.rateLimit) {
-      if (this.props.rateLimit.rate) {
-        rate = this.props.rateLimit.rate;
-        resetRateFormatted = <FormattedTime value={rate.reset}/>;
-      }
-      if (this.props.rateLimit.resources) {
-        core = this.props.rateLimit.resources.core;
+      core = this.props.rateLimit.core;
+      if (core) {
         resetCoreFormatted = <FormattedTime value={core.reset}/>;
-
-        search = this.props.rateLimit.resources.search;
+        configuredLimitPercentageCoreFormatted =
+            <FormattedNumber value={core.configuredLimitPercentage}
+                             style="percent"
+                             maximumFractionDigits={2}/>;
+        percentageUsedCoreFormatted =
+            <FormattedNumber value={core.percentageUsed} style="percent"
+                             maximumFractionDigits={2}/>;
+      }
+      search = this.props.rateLimit.search;
+      if (search) {
         resetSearchFormatted = <FormattedTime value={search.reset}/>;
-
-        graphql = this.props.rateLimit.resources.graphql;
+        configuredLimitPercentageSearchFormatted =
+            <FormattedNumber value={search.configuredLimitPercentage}
+                             style="percent"
+                             maximumFractionDigits={2}/>;
+        percentageUsedSearchFormatted =
+            <FormattedNumber value={search.percentageUsed} style="percent"
+                             maximumFractionDigits={2}/>;
+      }
+      graphql = this.props.rateLimit.graphql;
+      if (graphql) {
         resetGraphqlFormatted = <FormattedTime value={graphql.reset}/>;
+        configuredLimitPercentageGraphqlFormatted =
+            <FormattedNumber value={graphql.configuredLimitPercentage}
+                             style="percent"
+                             maximumFractionDigits={2}/>;
+        percentageUsedGraphqlFormatted =
+            <FormattedNumber value={graphql.percentageUsed} style="percent"
+                             maximumFractionDigits={2}/>;
       }
     }
 
     return (
         <Card title={this.props.title} key="rateLimit">
           <Spin spinning={this.props.loading}>
-            <Row>
-              <h2>Summarized</h2>
-            </Row>
-            <Row>
-              <Col offset={1}>
-                <b>Limit:</b> {rate && rate.limit}
-              </Col>
-            </Row>
-            <Row>
-              <Col offset={1}>
-                <b>Remaining:</b> {rate && rate.remaining}
-              </Col>
-            </Row>
-            <Row>
-              <Col offset={1}>
-                <b>Will be reset at:</b> {resetRateFormatted}
-              </Col>
-            </Row>
-            <Row>
-              <h2>By resource type</h2>
-            </Row>
-            <Row type="flex" justify="space-around" align="middle">
+            <Row type="flex" align="middle">
               <Col span={6}>
                 <Row>
-                  <h3>Core</h3>
+                  <h2>Core</h2>
                 </Row>
                 <Row>
-                  <b>Limit:</b> {core && core.limit}
+                  <b>API limit:</b> {core && core.limit}
                 </Row>
                 <Row>
-                  <b>Remaining:</b> {core && core.remaining}
+                  <b>Configured limit:</b>
+                  {core
+                  && core.configuredLimit} ({configuredLimitPercentageCoreFormatted})
+                </Row>
+                <Row>
+                  <b>Remaining:</b> {core && core.remainingForConfiguredLimit.toString()
+                } ({percentageUsedCoreFormatted} used)
                 </Row>
                 <Row>
                   <b>Will be reset at:</b> {resetCoreFormatted}
@@ -74,13 +83,18 @@ export class RateLimitCard extends Component {
               </Col>
               <Col span={6}>
                 <Row>
-                  <h3>Search</h3>
+                  <h2>Search</h2>
                 </Row>
                 <Row>
-                  <b>Limit:</b> {search && search.limit}
+                  <b>API limit:</b> {search && search.limit}
                 </Row>
                 <Row>
-                  <b>Remaining:</b> {search && search.remaining}
+                  <b>Configured limit:</b> {search
+                && search.configuredLimit} ({configuredLimitPercentageSearchFormatted})
+                </Row>
+                <Row>
+                  <b>Remaining:</b> {search
+                && search.remainingForConfiguredLimit} ({percentageUsedSearchFormatted} used)
                 </Row>
                 <Row>
                   <b>Will be reset at:</b> {resetSearchFormatted}
@@ -88,13 +102,18 @@ export class RateLimitCard extends Component {
               </Col>
               <Col span={6}>
                 <Row>
-                  <h3>GraphQL</h3>
+                  <h2>GraphQL</h2>
                 </Row>
                 <Row>
-                  <b>Limit:</b> {core && graphql.limit}
+                  <b>API limit:</b> {graphql && graphql.limit}
                 </Row>
                 <Row>
-                  <b>Remaining:</b> {core && graphql.remaining}
+                  <b>Configured limit:</b> {graphql
+                && graphql.configuredLimit} ({configuredLimitPercentageGraphqlFormatted})
+                </Row>
+                <Row>
+                  <b>Remaining:</b> {graphql
+                && graphql.remainingForConfiguredLimit} ({percentageUsedGraphqlFormatted} used)
                 </Row>
                 <Row>
                   <b>Will be reset at:</b> {resetGraphqlFormatted}

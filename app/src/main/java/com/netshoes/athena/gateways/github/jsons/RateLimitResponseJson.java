@@ -4,8 +4,6 @@ import com.netshoes.athena.domains.ScmApiRateLimit;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,16 +13,18 @@ public class RateLimitResponseJson {
   private Resources resources;
   private Resource rate;
 
-  public ScmApiRateLimit toDomain() {
-    final Map<String, ScmApiRateLimit.Resource> resourcesMap = new HashMap<>();
+  public ScmApiRateLimit toDomain(
+      Float coreLimitPercentage, Float searchLimitPercentage, Float graphqlLimitPercentage) {
 
-    resourcesMap.put("core", resources.getCore().toDomain());
-    resourcesMap.put("search", resources.getSearch().toDomain());
-    resourcesMap.put("graphql", resources.getGraphql().toDomain());
+    final ScmApiRateLimit.Resource coreDomain = resources.getCore().toDomain(coreLimitPercentage);
+    final ScmApiRateLimit.Resource searchDomain =
+        resources.getSearch().toDomain(searchLimitPercentage);
+    final ScmApiRateLimit.Resource graphqlDomain =
+        resources.getSearch().toDomain(graphqlLimitPercentage);
 
     final ScmApiRateLimit.Resource rateDomain = rate.toDomain();
 
-    return new ScmApiRateLimit(resourcesMap, rateDomain);
+    return new ScmApiRateLimit(coreDomain, searchDomain, graphqlDomain, rateDomain);
   }
 
   @Getter
@@ -43,9 +43,13 @@ public class RateLimitResponseJson {
     private long reset;
 
     public ScmApiRateLimit.Resource toDomain() {
+      return toDomain(null);
+    }
+
+    public ScmApiRateLimit.Resource toDomain(Float limitPercentage) {
       final OffsetDateTime offsetDateTime =
           OffsetDateTime.ofInstant(Instant.ofEpochSecond(reset), ZoneId.of("UTC"));
-      return new ScmApiRateLimit.Resource(limit, remaining, offsetDateTime);
+      return new ScmApiRateLimit.Resource(limit, remaining, limitPercentage, offsetDateTime);
     }
   }
 }

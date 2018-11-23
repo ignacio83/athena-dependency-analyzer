@@ -62,7 +62,7 @@ public class ProjectScan {
               log.warn("Could not get rate limit from SCM API.", throwable);
               return Mono.empty();
             })
-        .map(rateLimit -> rateLimit.getRate().getReset().toLocalDateTime())
+        .map(rateLimit -> rateLimit.getCore().getReset().toLocalDateTime())
         .defaultIfEmpty(LocalDateTime.now().plusMinutes(5))
         .map(
             scheduledDate -> {

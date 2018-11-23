@@ -44,7 +44,7 @@ public class RequestScanForPendingProjects {
   }
 
   private boolean hasSufficientRemainingRequests(ScmApiRateLimit rateLimit) {
-    final int remainingRequests = rateLimit.getRate().getRemaining();
+    final int remainingRequests = rateLimit.getCore().getRemaining();
     final boolean run = remainingRequests >= MINIMUM_REQUESTS_REQUIRED;
     if (!run) {
       log.info(

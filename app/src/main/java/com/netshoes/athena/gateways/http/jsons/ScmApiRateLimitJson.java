@@ -3,11 +3,8 @@ package com.netshoes.athena.gateways.http.jsons;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.netshoes.athena.domains.ScmApiRateLimit;
-import com.netshoes.athena.domains.ScmApiRateLimit.Resource;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -15,18 +12,22 @@ import lombok.Data;
 @ApiModel(value = "ScmApiRateLimit")
 public class ScmApiRateLimitJson {
 
-  @ApiModelProperty(value = "Limit for each kind of resource", required = true)
-  private final Map<String, ScmApiRateLimitResourceJson> resources;
-
   @ApiModelProperty(value = "Limit rate", required = true)
-  private final ScmApiRateLimitResourceJson rate;
+  private final ScmApiRateLimitResourceJson summary;
+
+  @ApiModelProperty(value = "Limit for each core resource", required = true)
+  private final ScmApiRateLimitResourceJson core;
+
+  @ApiModelProperty(value = "Limit for each search resource", required = true)
+  private final ScmApiRateLimitResourceJson search;
+
+  @ApiModelProperty(value = "Limit for each graphql resource", required = true)
+  private final ScmApiRateLimitResourceJson graphql;
 
   public ScmApiRateLimitJson(ScmApiRateLimit domain) {
-    this.rate = new ScmApiRateLimitResourceJson(domain.getRate());
-    this.resources = new HashMap<>();
-    final Map<String, Resource> domainResources = domain.getResources();
-
-    domainResources.forEach(
-        (String k, Resource v) -> resources.put(k, new ScmApiRateLimitResourceJson(v)));
+    this.summary = new ScmApiRateLimitResourceJson(domain.getSummary());
+    this.core = new ScmApiRateLimitResourceJson(domain.getCore());
+    this.search = new ScmApiRateLimitResourceJson(domain.getSearch());
+    this.graphql = new ScmApiRateLimitResourceJson(domain.getGraphql());
   }
 }
