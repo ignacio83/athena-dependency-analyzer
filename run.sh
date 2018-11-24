@@ -32,14 +32,16 @@ echo "=============================="
 
 
 exec $(type -p java) \
-  -jar /opt/athena-dependency-analyzer.jar \
-  --spring.data.mongodb.uri=${MONGO_URI} \
-  --spring.rabbitmq.addresses=${RABBITMQ_ADDRESSES} \
-  --spring.rabbitmq.virtual-host=${RABBITMQ_HOST} \
-  --spring.rabbitmq.username=${RABBITMQ_USER} \
-  --spring.rabbitmq.password=${RABBITMQ_PASS} \
-  --application.github.token=${GITHUB_TOKEN} \
-  --application.github.host=${GITHUB_HOST} \
-  --application.github.organization=${GITHUB_ORGANIZATION} \
-  --application.security.admin.username=${ADMIN_USERNAME} \
-  --application.security.admin.password=${ADMIN_PASSWORD} 
+  -cp /opt/app:opt/app/lib/* \
+  -Dspring.data.mongodb.uri=${MONGO_URI} \
+  -Dspring.rabbitmq.addresses=${RABBITMQ_ADDRESSES} \
+  -Dspring.rabbitmq.virtual-host=${RABBITMQ_HOST} \
+  -Dspring.rabbitmq.username=${RABBITMQ_USER} \
+  -Dspring.rabbitmq.password=${RABBITMQ_PASS} \
+  -Dapplication.github.token=${GITHUB_TOKEN} \
+  -Dapplication.github.host=${GITHUB_HOST} \
+  -Dapplication.github.organization=${GITHUB_ORGANIZATION} \
+  -Dapplication.security.admin.username=${ADMIN_USERNAME} \
+  -Dapplication.security.admin.password=${ADMIN_PASSWORD} \
+  com.netshoes.athena.Application
+

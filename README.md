@@ -14,7 +14,7 @@ Inside of java app the code is available at `src/main/java` and the frontend fil
 ### Running dependencies
 
     docker run -d --name athena_rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.7.7-management-alpine
-    docker run -d --name athena_mongo -p 27017:27017 mongo:3.7.9 --smallfiles
+    docker run -d --name athena_mongo -p 27017:27017 mongo:3.6.9 --smallfiles
 
 ### Running the backend
 Run `Application` class from your IDE informing the following spring boot parameters: 
@@ -46,7 +46,7 @@ present already and tell webpack to generate our `bundle.js`. It's the equivalen
     export GITHUB_ORGANIZATION=my_organization
     export GITHUB_TOKEN=my_token
     export ADMIN_USERNAME=admin
-    export ADMIN_PASSWORD=admin
+    export ADMIN_PASSWORD={noop}admin
     
     docker-compose up 
 
@@ -69,7 +69,7 @@ present already and tell webpack to generate our `bundle.js`. It's the equivalen
                         --env GITHUB_ORGANIZATION="Your_OrganizationGit" \
                         --env GITHUB_TOKEN="Token_yourOrganizationGit" \
                         --env ADMIN_USERNAME=user \
-                        --env ADMIN_PASSWORD=pass \
+                        --env ADMIN_PASSWORD={noop}pass \
                         --detach=false \
                         --mount type=bind,source=/usr/share/zoneinfo/America/Sao_Paulo,destination=/etc/timezone,readonly \ ## Config your timezone
                         netshoes/athena-dependency-analyzer:latest

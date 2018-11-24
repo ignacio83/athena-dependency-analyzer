@@ -2,7 +2,7 @@ version: '3'
 
 services:
   mongo:
-    image: mongo:3.7.9
+    image: mongo:3.6.9
     command: --smallfiles
     ports:
       - "27017:27017"
