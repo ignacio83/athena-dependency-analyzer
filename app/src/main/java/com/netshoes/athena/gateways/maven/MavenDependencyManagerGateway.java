@@ -6,6 +6,7 @@ import com.netshoes.athena.domains.DependencyArtifact;
 import com.netshoes.athena.domains.DependencyManagementDescriptor;
 import com.netshoes.athena.domains.DependencyScope;
 import com.netshoes.athena.domains.MavenDependencyManagementDescriptor;
+import com.netshoes.athena.domains.ScmRepositoryContent;
 import com.netshoes.athena.domains.ScmRepositoryContentData;
 import com.netshoes.athena.gateways.DependencyManagerGateway;
 import com.netshoes.athena.gateways.InvalidDependencyManagerDescriptorException;
@@ -37,16 +38,20 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
   }
 
   @Override
-  public Mono<DependencyManagementDescriptor> analyze(ScmRepositoryContentData content) {
-    final String path = content.getScmRepositoryContent().getPath();
-    final String repositoryId = content.getScmRepositoryContent().getRepository().getId();
+  public Mono<DependencyManagementDescriptor> analyze(
+      ScmRepositoryContentData scmRepositoryContentData) {
+    final ScmRepositoryContent content = scmRepositoryContentData.getScmRepositoryContent();
+    final String path = content.getPath();
+    final String repositoryId = content.getRepository().getId();
 
-    log.trace("Reading content from {} in {} ...", path, repositoryId);
+    // TODO new MavenCli().doMain(new String[] {"dependency:resolve"}, "", System.out, System.out);
 
-    final StringReader reader = new StringReader(content.getData());
+    log.trace("Reading scmRepositoryContentData from {} in {} ...", path, repositoryId);
+
+    final StringReader reader = new StringReader(scmRepositoryContentData.getData());
     final Model model = getModel(reader);
     final MavenDependencyManagementDescriptor descriptor =
-        buildMavenDependencyManagementDescriptor(model);
+        buildMavenDependencyManagementDescriptor(model, content.getStoragePath());
 
     log.debug(
         "Content {} in {} read with success. Project: {}",
@@ -92,13 +97,13 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
   }
 
   private MavenDependencyManagementDescriptor buildMavenDependencyManagementDescriptor(
-      Model model) {
+      Model model, String storagePath) {
     final Parent parent = model.getParent();
     final Artifact parentArtifact = buildParentArtifact(parent);
     final Artifact project = buildProjectArtifact(model, parentArtifact);
 
     final MavenDependencyManagementDescriptor descriptor =
-        new MavenDependencyManagementDescriptor(project);
+        new MavenDependencyManagementDescriptor(project, storagePath);
 
     descriptor.setParentArtifact(Optional.ofNullable(parentArtifact));
 

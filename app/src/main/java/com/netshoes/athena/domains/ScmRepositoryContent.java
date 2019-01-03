@@ -22,6 +22,10 @@ public class ScmRepositoryContent {
     this.depth = path.chars().filter(c -> c == '/').count();
   }
 
+  public String getStoragePath() {
+    return String.format("/projects/%s/%s", repository.getName(), path);
+  }
+
   public String subdirectoryPath(String pathPrefix) {
     String subdirectoryPath = null;
     if (isDirectory()) {

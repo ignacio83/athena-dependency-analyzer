@@ -14,6 +14,7 @@ import com.netshoes.athena.domains.ScmApiRateLimitTemplateLoader;
 import com.netshoes.athena.domains.ScmRepository;
 import com.netshoes.athena.domains.ScmRepositoryTemplateLoader;
 import com.netshoes.athena.gateways.DependencyManagerGateway;
+import com.netshoes.athena.gateways.FileStorageGateway;
 import com.netshoes.athena.gateways.PendingProjectAnalyzeGateway;
 import com.netshoes.athena.gateways.ProjectGateway;
 import com.netshoes.athena.gateways.ScmApiGatewayRateLimitExceededException;
@@ -39,6 +40,7 @@ public class ProjectScanTest {
   @Mock private ProjectGateway projectGateway;
   @Mock private PendingProjectAnalyzeGateway pendingProjectAnalyzeGateway;
   @Mock private AnalyzeProjectDependencies analyzeProjectDependencies;
+  @Mock private FileStorageGateway fileStorageGateway;
   @Captor private ArgumentCaptor<PendingProjectAnalyze> pendingProjectAnalyzeCaptor;
 
   private ProjectScan projectScan;
@@ -53,6 +55,7 @@ public class ProjectScanTest {
     projectScan =
         new ProjectScan(
             scmGateway,
+            fileStorageGateway,
             dependencyManagerGateway,
             projectGateway,
             pendingProjectAnalyzeGateway,

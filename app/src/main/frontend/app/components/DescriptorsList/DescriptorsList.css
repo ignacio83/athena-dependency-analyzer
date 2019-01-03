@@ -2,3 +2,12 @@
   padding-left: 3px;
   padding-right: 3px;
 }
+
+.descriptor-content{
+  overflow-y: auto;
+  max-height: 80%;
+}
+
+.descriptor-content .ant-modal-body{
+  font-size: 12px;
+}

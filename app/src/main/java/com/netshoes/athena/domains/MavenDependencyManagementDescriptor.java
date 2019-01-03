@@ -16,12 +16,14 @@ public class MavenDependencyManagementDescriptor implements DependencyManagement
   private final Artifact project;
   private final String dependencyDescriptorId;
   private Optional<Artifact> parentArtifact;
+  private Optional<String> storagePath;
   private final Set<DependencyArtifact> dependencyArtifacts = new TreeSet<>();
   private final Set<DependencyArtifact> dependencyManagementArtifacts = new TreeSet<>();
 
-  public MavenDependencyManagementDescriptor(Artifact project) {
+  public MavenDependencyManagementDescriptor(Artifact project, String storagePath) {
     this.project = project;
     this.dependencyDescriptorId = project.getId();
+    this.storagePath = Optional.ofNullable(storagePath);
   }
 
   @Override
@@ -52,13 +54,10 @@ public class MavenDependencyManagementDescriptor implements DependencyManagement
 
   @Override
   public Set<Technology> getRelatedTechnologies() {
-    final Set<Technology> set =
-        getArtifacts()
-            .stream()
-            .flatMap(a -> a.getRelatedTechnologies().stream())
-            .collect(Collectors.toSet());
-
-    return set;
+    return getArtifacts()
+        .stream()
+        .flatMap(a -> a.getRelatedTechnologies().stream())
+        .collect(Collectors.toSet());
   }
 
   @Override

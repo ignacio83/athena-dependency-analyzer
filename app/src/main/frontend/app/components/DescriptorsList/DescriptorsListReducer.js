@@ -1,5 +1,9 @@
 import {
-  RECEIVE_DESCRIPTORS, REQUEST_DESCRIPTORS,
+  CLOSE_DESCRIPTOR_CONTENT,
+  RECEIVE_DESCRIPTOR_CONTENT,
+  RECEIVE_DESCRIPTORS,
+  REQUEST_DESCRIPTOR_CONTENT,
+  REQUEST_DESCRIPTORS,
   SELECT_DESCRIPTOR
 } from './DescriptorsListActions'
 
@@ -26,7 +30,21 @@ export default function reducer(state = initialState, action) {
         loading: false,
         selectedId: action.descriptorId
       });
-
+    case REQUEST_DESCRIPTOR_CONTENT:
+      return Object.assign({}, state, {
+        loading: true
+      });
+    case RECEIVE_DESCRIPTOR_CONTENT:
+      return Object.assign({}, state, {
+        loading: false,
+        descriptorContent: action.descriptorContent,
+        showDescriptorContentModal: true
+      });
+    case CLOSE_DESCRIPTOR_CONTENT:
+      return Object.assign({}, state, {
+        descriptorContent: null,
+        showDescriptorContentModal: false
+      });
     default:
       return state;
   }

@@ -8,6 +8,8 @@ public interface DependencyManagementDescriptor extends Comparable {
 
   String getDependencyDescriptorId();
 
+  Optional<String> getStoragePath();
+
   Optional<Artifact> getParentArtifact();
 
   Artifact getProject();

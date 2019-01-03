@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class DependencyManagementDescriptorDoc implements Serializable {
   private ArtifactDoc project;
+  private String storagePath;
   private List<DependencyArtifactDoc> artifacts;
 
   public DependencyManagementDescriptorDoc(DependencyManagementDescriptor domain) {
@@ -23,13 +24,14 @@ public class DependencyManagementDescriptorDoc implements Serializable {
         domainArtifacts.stream().map(DependencyArtifactDoc::new).collect(Collectors.toList());
 
     this.project = new ArtifactDoc(domain.getProject());
+    this.storagePath = domain.getStoragePath().orElse(null);
     this.artifacts = artifacts;
   }
 
   public DependencyManagementDescriptor toDomain() {
     final Artifact projectDomain = project.toDomain();
     final MavenDependencyManagementDescriptor domain =
-        new MavenDependencyManagementDescriptor(projectDomain);
+        new MavenDependencyManagementDescriptor(projectDomain, storagePath);
 
     Optional<Artifact> parentArtifact = Optional.empty();
 

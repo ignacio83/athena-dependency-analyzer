@@ -1,11 +1,17 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import PropTypes from "prop-types";
-import {listDescriptors, selectDescriptor} from './DescriptorsListActions';
+import {
+  closeDescriptorContent,
+  listDescriptors,
+  selectDescriptor,
+  viewDescriptorContent
+} from './DescriptorsListActions';
 import {bindActionCreators} from 'redux'
-import {Card, Icon, Table} from 'antd';
+import {Card, Icon, Modal, Table} from 'antd';
 import './DescriptorsList.css';
-import UnstableVersionIndicator from "../UnstableVersionIndicator/UnstableVersionIndicator";
+import UnstableVersionIndicator
+  from "../UnstableVersionIndicator/UnstableVersionIndicator";
 
 const Column = Table.Column;
 
@@ -23,9 +29,18 @@ export class DescriptorsList extends Component {
     }
   }
 
-  onClickDescriptor(descriptorId, e) {
+  onClickPlusIcon(descriptorId, e) {
     this.props.selectDescriptor(descriptorId);
     e.preventDefault();
+  }
+
+  onClickFileIcon(descriptorId, e) {
+    this.props.viewDescriptorContent(this.props.projectId, descriptorId);
+    e.preventDefault();
+  }
+
+  closeDescriptorContent() {
+    this.props.closeDescriptorContent();
   }
 
   render() {
@@ -70,15 +85,33 @@ export class DescriptorsList extends Component {
                 width="12%"
                 render={(text, record) => (
                     <span>
-                        <a href={"#"}
-                           onClick={this.onClickDescriptor.bind(
-                               this, record.id)}
-                           title={"View dependencies"}>
-                          <Icon type="plus-circle-o" className={'action-btn'}/>
-                        </a>
-                      </span>
+                        {record.contentDownloaded === 'true' ? <a href='#'
+                                                                  onClick={this.onClickFileIcon.bind(
+                                                                      this,
+                                                                      record.id)}
+                                                                  title='View descriptor'>
+                          <Icon type="file-text" className='action-btn'/>
+                        </a> : null}
+                      <a href='#'
+                         onClick={this.onClickPlusIcon.bind(
+                             this, record.id)}
+                         title='View dependencies'>
+                        <Icon type='plus-circle-o' className='action-btn'/>
+                      </a>
+                    </span>
                 )}/>
           </Table>
+          <Modal title="pom.xml"
+                 visible={this.props.showDescriptorContentModal}
+                 onOk={this.closeDescriptorContent.bind(this)}
+                 onCancel={this.closeDescriptorContent.bind(this)}
+                 width="50%"
+                 className="descriptor-content"
+                 footer={null}>
+            <pre>
+              {this.props.descriptorContent}
+            </pre>
+          </Modal>
         </Card>
     )
   }
@@ -92,12 +125,20 @@ const mapStateToProps = (state) => {
   return {
     projectId: state.projects.selectedId,
     descriptors: state.projects.selectedId ? state.descriptors.list : [],
+    descriptorContent: state.descriptors.descriptorContent,
+    showDescriptorContentModal: state.descriptors.showDescriptorContentModal,
     loading: state.descriptors.loading
   }
 };
 
 function mapDispatchToProps(dispatch) {
-  return bindActionCreators({listDescriptors, selectDescriptor}, dispatch);
+  return bindActionCreators(
+      {
+        listDescriptors,
+        selectDescriptor,
+        viewDescriptorContent,
+        closeDescriptorContent
+      }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(DescriptorsList)

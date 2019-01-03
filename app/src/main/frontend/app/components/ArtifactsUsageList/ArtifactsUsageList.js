@@ -141,6 +141,7 @@ export class ArtifactsUsageList extends Component {
               visible={this.props.showProjectsModal}
               onOk={this.closeProjects.bind(this)}
               onCancel={this.closeProjects.bind(this)}
+              footer={null}
           >
             <Table dataSource={this.props.projectsList} size="small">
               <Column
