@@ -23,8 +23,8 @@ public class DependencyManagementDescriptorJson {
   @ApiModelProperty(value = "Parent artifact of dependency management descriptor")
   private final ArtifactJson parent;
 
-  @ApiModelProperty(value = "Indicate if content was downloaded")
-  private final boolean contentDownloaded;
+  @ApiModelProperty(value = "Indicate if content was stored")
+  private final boolean contentStored;
 
   @ApiModelProperty("List of dependencies")
   private final List<DependencyArtifactJson> artifacts;
@@ -39,8 +39,7 @@ public class DependencyManagementDescriptorJson {
     this.parent = parentArtifact.map(ArtifactJson::new).orElse(null);
 
     this.id = project.getId();
-
-    this.contentDownloaded = domain.getStoragePath().isPresent();
+    this.contentStored = domain.getStoragePath().isPresent();
 
     final List<Artifact> domainArtifacts = domain.getArtifacts();
     this.artifacts =

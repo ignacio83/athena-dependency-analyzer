@@ -39,6 +39,29 @@ export class DescriptorsList extends Component {
     e.preventDefault();
   }
 
+  renderActions(text, record) {
+    let result = [];
+    result.push(<a href='#'
+                   key="anchorPlusIcon"
+                   onClick={this.onClickPlusIcon.bind(
+                       this, record.id)}
+                   title='View dependencies'>
+      <Icon type='plus-circle-o' className='action-btn'/>
+    </a>);
+
+    if (record.contentStored) {
+      result.push(<a href='#'
+                     key="anchorFileIcon"
+                     onClick={this.onClickFileIcon.bind(
+                         this,
+                         record.id)}
+                     title='View descriptor'>
+        <Icon type="file-text" className='action-btn'/>
+      </a>);
+    }
+    return (<span key="actionSpan">{result}</span>);
+  }
+
   closeDescriptorContent() {
     this.props.closeDescriptorContent();
   }
@@ -83,23 +106,7 @@ export class DescriptorsList extends Component {
                 title="Actions"
                 key="action"
                 width="12%"
-                render={(text, record) => (
-                    <span>
-                        {record.contentDownloaded === 'true' ? <a href='#'
-                                                                  onClick={this.onClickFileIcon.bind(
-                                                                      this,
-                                                                      record.id)}
-                                                                  title='View descriptor'>
-                          <Icon type="file-text" className='action-btn'/>
-                        </a> : null}
-                      <a href='#'
-                         onClick={this.onClickPlusIcon.bind(
-                             this, record.id)}
-                         title='View dependencies'>
-                        <Icon type='plus-circle-o' className='action-btn'/>
-                      </a>
-                    </span>
-                )}/>
+                render={this.renderActions.bind(this)}/>
           </Table>
           <Modal title="pom.xml"
                  visible={this.props.showDescriptorContentModal}
@@ -113,7 +120,8 @@ export class DescriptorsList extends Component {
             </pre>
           </Modal>
         </Card>
-    )
+    );
+
   }
 }
 
