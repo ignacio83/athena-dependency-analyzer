@@ -17,16 +17,16 @@ export ADMIN_PASSWORD=${10}	    # Password for admin
 echo "=============================="
 echo "      startup parameters"
 echo "=============================="
-echo $1
-echo $2
-echo $3
-echo $4
-echo $5
-echo $6
-echo $7
-echo $8
-echo $9
-echo ${10}
+echo "MONGO_URI: " $1
+echo "RABBITMQ_ADDRESSES: " $2
+echo "RABBITMQ_HOST: " $3
+echo "RABBITMQ_USER: " $4
+echo "RABBITMQ_PASS: " $5
+echo "GITHUB_TOKEN: " $6
+echo "GITHUB_HOST: " $7
+echo "GITHUB_ORGANIZATION: " $8
+echo "ADMIN_USERNAME: " $9
+echo "ADMIN_PASSWORD: " ${10}
 
 echo "=============================="
 

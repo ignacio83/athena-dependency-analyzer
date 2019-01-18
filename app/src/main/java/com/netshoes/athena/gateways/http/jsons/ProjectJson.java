@@ -5,6 +5,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.netshoes.athena.domains.AnalyzeExecution;
 import com.netshoes.athena.domains.Artifact;
 import com.netshoes.athena.domains.DependencyManagementDescriptor;
 import com.netshoes.athena.domains.Project;
@@ -59,6 +60,9 @@ public class ProjectJson extends ResourceSupport {
   @ApiModelProperty("Quantity of unique unstable artifacts")
   private final Integer unstableArtifactsUniqueCount;
 
+  @ApiModelProperty("One or more fallbacks are executed in the last analyze")
+  private final boolean lastAnalyzeExecutionHasFallback;
+
   public ProjectJson(Project domain) {
     final ScmRepository domainScmRepository = domain.getScmRepository();
     this.name = domain.getName();
@@ -93,6 +97,13 @@ public class ProjectJson extends ResourceSupport {
             .flatMap(d -> d.getUnstableArtifacts().stream())
             .filter(distinctByKey(Artifact::getArtifactId))
             .count();
+
+    this.lastAnalyzeExecutionHasFallback =
+        domain
+            .getDescriptors()
+            .parallelStream()
+            .map(DependencyManagementDescriptor::getLastExecution)
+            .anyMatch(AnalyzeExecution::isFallback);
 
     unstableArtifactsUniqueCount = (int) unstableCount;
 

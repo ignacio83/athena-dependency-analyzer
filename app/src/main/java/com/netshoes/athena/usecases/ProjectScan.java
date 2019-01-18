@@ -1,13 +1,16 @@
 package com.netshoes.athena.usecases;
 
-import com.netshoes.athena.domains.DependencyManagementDescriptor;
+import com.netshoes.athena.conf.FeatureProperties;
+import com.netshoes.athena.domains.DependencyManagementDescriptorAnalyzeResult;
 import com.netshoes.athena.domains.File;
 import com.netshoes.athena.domains.PendingProjectAnalyze;
 import com.netshoes.athena.domains.Project;
+import com.netshoes.athena.domains.ProjectAnalyzeRequest;
 import com.netshoes.athena.domains.ScmRepository;
 import com.netshoes.athena.domains.ScmRepositoryContent;
 import com.netshoes.athena.domains.ScmRepositoryContentData;
 import com.netshoes.athena.gateways.CouldNotGetRepositoryContentException;
+import com.netshoes.athena.gateways.DependencyManagementDescriptorAnalyzeExecutionGateway;
 import com.netshoes.athena.gateways.DependencyManagerGateway;
 import com.netshoes.athena.gateways.FileStorageGateway;
 import com.netshoes.athena.gateways.PendingProjectAnalyzeGateway;
@@ -17,8 +20,7 @@ import com.netshoes.athena.gateways.ScmGateway;
 import com.netshoes.athena.usecases.exceptions.ProjectNotFoundException;
 import com.netshoes.athena.usecases.exceptions.ProjectScanException;
 import com.netshoes.athena.usecases.exceptions.ScmApiRateLimitExceededException;
-import com.netshoes.athena.usecases.exceptions.StoreDependencyDescriptorException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,15 +33,17 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class ProjectScan {
-  private static final String VALID_DESCRIPTORS[] = new String[] {"pom.xml"};
+  private static final String[] VALID_DESCRIPTORS = new String[] {"pom.xml"};
   private static final int MAX_DIRECTORY_DEPTH = 1;
-  private static final String UTF_8 = "UTF-8";
   private final ScmGateway scmGateway;
   private final FileStorageGateway fileStorageGateway;
   private final DependencyManagerGateway dependencyManagerGateway;
   private final ProjectGateway projectGateway;
   private final PendingProjectAnalyzeGateway pendingProjectAnalyzeGateway;
+  private final DependencyManagementDescriptorAnalyzeExecutionGateway
+      dependencyManagementDescriptorAnalyzeExecutionGateway;
   private final AnalyzeProjectDependencies analyzeProjectDependencies;
+  private final FeatureProperties featureProperties;
 
   public Mono<Project> execute(String projectId, String repositoryId, String branch) {
     final Mono<Project> project =
@@ -110,7 +114,15 @@ public class ProjectScan {
     final Mono<Project> runAnalyses =
         findDependencyManagerDescriptors(project)
             .doOnNext(this::logRepositoryContent)
-            .flatMap(this::analyzeContentOnErrorResume)
+            .collectList()
+            .map(list -> new ProjectAnalyzeRequest(project, list))
+            .flatMapMany(this::analyzeContentsOnErrorResume)
+            .flatMap(
+                result ->
+                    dependencyManagementDescriptorAnalyzeExecutionGateway
+                        .save(result.getExecution())
+                        .thenReturn(result))
+            .map(DependencyManagementDescriptorAnalyzeResult::getDependencyManagementDescriptor)
             .collect(() -> project, Project::addDependencyManagerDescriptor)
             .flatMap(this::saveProjectOnErrorResume)
             .map(Project::getId)
@@ -119,7 +131,7 @@ public class ProjectScan {
     final Mono<Project> logAnalysisStart = Mono.fromCallable(() -> this.logAnalyzesStart(project));
     final Mono<Void> deletePendingAnalyzes = pendingProjectAnalyzeGateway.delete(project.getId());
     final Mono<Project> clearProjectDescriptor =
-        Mono.fromCallable(() -> project.clearDependencyManagerDescriptors());
+        Mono.fromCallable(project::clearDependencyManagerDescriptors);
 
     return logAnalysisStart
         .thenMany(deletePendingAnalyzes)
@@ -184,12 +196,7 @@ public class ProjectScan {
     final ScmRepositoryContent scmRepositoryContent = contentData.getScmRepositoryContent();
     final String storagePath = scmRepositoryContent.getStoragePath();
 
-    byte[] bytes;
-    try {
-      bytes = contentData.getData().getBytes(UTF_8);
-    } catch (UnsupportedEncodingException e) {
-      throw new StoreDependencyDescriptorException(scmRepositoryContent, e);
-    }
+    final byte[] bytes = contentData.getData().getBytes(StandardCharsets.UTF_8);
     return fileStorageGateway.store(new File(storagePath, bytes), true).thenReturn(contentData);
   }
 
@@ -209,16 +216,20 @@ public class ProjectScan {
     return new ScmApiRateLimitExceededException(e, e.getMinutesToReset());
   }
 
-  private Mono<DependencyManagementDescriptor> analyzeContentOnErrorResume(
-      ScmRepositoryContentData content) {
-    Mono<DependencyManagementDescriptor> descriptor;
+  private Flux<DependencyManagementDescriptorAnalyzeResult> analyzeContentsOnErrorResume(
+      ProjectAnalyzeRequest project) {
+    Flux<DependencyManagementDescriptorAnalyzeResult> results;
     try {
-      descriptor = dependencyManagerGateway.analyze(content);
+      final boolean enabled = featureProperties.getDependencyResolution().isEnabled();
+      results =
+          enabled
+              ? dependencyManagerGateway.resolveDependenciesAnalyse(project)
+              : dependencyManagerGateway.staticAnalyse(project);
     } catch (Exception e) {
-      descriptor = Mono.empty();
+      results = Flux.empty();
       log.error(e.getMessage(), e);
     }
-    return descriptor;
+    return results;
   }
 
   private Mono<? extends Project> saveProjectOnErrorResume(Project p) {

@@ -51,6 +51,7 @@ public class LocalFileStorageGateway implements FileStorageGateway {
   }
 
   private Path buildPath(String filePath) {
-    return Paths.get(String.format("%s/%s", storageProperties.getLocal().getPath(), filePath));
+    return Paths.get(
+        String.format("%s/%s/%s", storageProperties.getLocal().getPath(), "descriptors", filePath));
   }
 }

@@ -17,13 +17,19 @@ public class DependencyManagementDescriptorJson {
   @ApiModelProperty(value = "Id of dependency management descriptor", required = true)
   private final String id;
 
+  @ApiModelProperty(value = "Name of dependency management descriptor", required = true)
+  private final String name;
+
   @ApiModelProperty(value = "Project artifact of dependency management descriptor", required = true)
   private final ArtifactJson project;
 
   @ApiModelProperty(value = "Parent artifact of dependency management descriptor")
   private final ArtifactJson parent;
 
-  @ApiModelProperty(value = "Indicate if content was stored")
+  @ApiModelProperty(value = "Last execution of analyses")
+  private final AnalyzeExecutionJson lastExecution;
+
+  @ApiModelProperty(value = "Indicate if content was stored", required = true)
   private final boolean contentStored;
 
   @ApiModelProperty("List of dependencies")
@@ -39,7 +45,9 @@ public class DependencyManagementDescriptorJson {
     this.parent = parentArtifact.map(ArtifactJson::new).orElse(null);
 
     this.id = project.getId();
+    this.name = domain.getName();
     this.contentStored = domain.getStoragePath().isPresent();
+    this.lastExecution = new AnalyzeExecutionJson(domain.getLastExecution());
 
     final List<Artifact> domainArtifacts = domain.getArtifacts();
     this.artifacts =

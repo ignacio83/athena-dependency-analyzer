@@ -5,7 +5,7 @@ WORKDIR /workspace/app
 COPY app/target/athena-dependency-analyzer.jar /workspace/app
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../../*.jar)
 
-FROM openjdk:11-jre-slim
+FROM maven:3.6.0-jdk-11-slim
 MAINTAINER https://www.netshoes.com.br
 
 ARG DEPENDENCY=/workspace/app/target/dependency

@@ -23,15 +23,7 @@ public class ScmRepositoryContent {
   }
 
   public String getStoragePath() {
-    return String.format("/projects/%s/%s", repository.getName(), path);
-  }
-
-  public String subdirectoryPath(String pathPrefix) {
-    String subdirectoryPath = null;
-    if (isDirectory()) {
-      subdirectoryPath = String.format("%s/%s", pathPrefix, name);
-    }
-    return subdirectoryPath;
+    return String.format("/%s/%s", repository.getName(), path);
   }
 
   public String getPathWithoutRootSlash() {

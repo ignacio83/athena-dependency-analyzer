@@ -18,7 +18,8 @@ const initialState = {
   loading: false,
   refreshLoading: false,
   refreshError: false,
-  refreshErrorMessage: null
+  refreshErrorMessage: null,
+  selected: null
 };
 
 export default function reducer(state = initialState, action) {
@@ -26,7 +27,7 @@ export default function reducer(state = initialState, action) {
     case SELECT_PROJECT:
       return Object.assign({}, state, {
         loading: false,
-        selectedId: action.projectId
+        selected: action.project
       });
     case REQUEST_PROJECTS:
       return Object.assign({}, state, {
@@ -67,7 +68,7 @@ export default function reducer(state = initialState, action) {
       return Object.assign({}, state, {
         loading: false,
         refreshLoading: false,
-        selectedId: null
+        selected: null
       });
 
     case REQUEST_REFRESH_PROJECT_FAILED:

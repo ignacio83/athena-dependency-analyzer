@@ -3,11 +3,23 @@
   padding-right: 3px;
 }
 
-.descriptor-content{
+.descriptors .ant-table-title {
+  font-weight: bold;
+}
+
+.descriptor-content {
   overflow-y: auto;
   max-height: 80%;
 }
 
-.descriptor-content .ant-modal-body{
+.descriptor-content .ant-modal-body {
   font-size: 12px;
+}
+
+.descriptor-content pre {
+  white-space: pre-wrap; /* Since CSS 2.1 */
+  white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+  white-space: -pre-wrap; /* Opera 4-6 */
+  white-space: -o-pre-wrap; /* Opera 7 */
+  word-wrap: break-word; /* Internet Explorer 5.5+ */
 }

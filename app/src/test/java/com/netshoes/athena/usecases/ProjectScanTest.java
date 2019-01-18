@@ -8,11 +8,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import br.com.six2six.fixturefactory.loader.FixtureFactoryLoader;
+import com.netshoes.athena.conf.FeatureProperties;
 import com.netshoes.athena.domains.PendingProjectAnalyze;
 import com.netshoes.athena.domains.ScmApiRateLimit;
 import com.netshoes.athena.domains.ScmApiRateLimitTemplateLoader;
 import com.netshoes.athena.domains.ScmRepository;
 import com.netshoes.athena.domains.ScmRepositoryTemplateLoader;
+import com.netshoes.athena.gateways.DependencyManagementDescriptorAnalyzeExecutionGateway;
 import com.netshoes.athena.gateways.DependencyManagerGateway;
 import com.netshoes.athena.gateways.FileStorageGateway;
 import com.netshoes.athena.gateways.PendingProjectAnalyzeGateway;
@@ -39,8 +41,14 @@ public class ProjectScanTest {
   @Mock private DependencyManagerGateway dependencyManagerGateway;
   @Mock private ProjectGateway projectGateway;
   @Mock private PendingProjectAnalyzeGateway pendingProjectAnalyzeGateway;
+
+  @Mock
+  private DependencyManagementDescriptorAnalyzeExecutionGateway
+      dependencyManagementDescriptorAnalyzeExecutionGateway;
+
   @Mock private AnalyzeProjectDependencies analyzeProjectDependencies;
   @Mock private FileStorageGateway fileStorageGateway;
+  private FeatureProperties featureProperties = new FeatureProperties();
   @Captor private ArgumentCaptor<PendingProjectAnalyze> pendingProjectAnalyzeCaptor;
 
   private ProjectScan projectScan;
@@ -59,7 +67,9 @@ public class ProjectScanTest {
             dependencyManagerGateway,
             projectGateway,
             pendingProjectAnalyzeGateway,
-            analyzeProjectDependencies);
+            dependencyManagementDescriptorAnalyzeExecutionGateway,
+            analyzeProjectDependencies,
+            featureProperties);
   }
 
   @Test
@@ -67,7 +77,8 @@ public class ProjectScanTest {
     final ScmRepository scmRepository =
         from(ScmRepository.class).gimme(ScmRepositoryTemplateLoader.DEFAULT);
     final ScmApiRateLimit scmApiRateLimit =
-        from(ScmApiRateLimit.class).gimme(ScmApiRateLimitTemplateLoader.TEN_PERCENT_AVAILABLE_NO_CONFIGURED_LIMIT);
+        from(ScmApiRateLimit.class)
+            .gimme(ScmApiRateLimitTemplateLoader.TEN_PERCENT_AVAILABLE_NO_CONFIGURED_LIMIT);
 
     when(projectGateway.findById(eq("NONE"))).thenReturn(Mono.empty());
     when(scmGateway.getRepository(eq(scmRepository.getId()))).thenReturn(Mono.just(scmRepository));

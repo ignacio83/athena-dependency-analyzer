@@ -6,9 +6,13 @@ import java.util.Set;
 
 public interface DependencyManagementDescriptor extends Comparable {
 
+  String getName();
+
   String getDependencyDescriptorId();
 
   Optional<String> getStoragePath();
+
+  AnalyzeExecution getLastExecution();
 
   Optional<Artifact> getParentArtifact();
 

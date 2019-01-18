@@ -32,7 +32,7 @@ export class HomeContent extends Component {
                   <DescriptorsList title="Dependency Management Descriptors"/>
                 </Col>
                 <Col span={12}>
-                  <ArtifactsList title="Artifacts"/>
+                  <ArtifactsList title="Artifacts" titleSeparator=" for "/>
                 </Col>
               </Row>
             </Col>

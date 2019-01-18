@@ -8,6 +8,7 @@ import com.netshoes.athena.gateways.ProjectGateway;
 import com.netshoes.athena.usecases.exceptions.ProjectNotFoundException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -51,7 +52,7 @@ public class AnalyzeProjectDependencies {
         Mono.just(artifact)
             .doOnNext(this::logStartingAnalyze)
             .flatMapMany(this::discoverTechnologies)
-            .collect(() -> new HashSet<Technology>(), Set::add)
+            .collect((Supplier<HashSet<Technology>>) HashSet::new, Set::add)
             .map(artifact::addRelatedTechnologies)
             .doOnNext(this::logTechnologiesIfModified);
 

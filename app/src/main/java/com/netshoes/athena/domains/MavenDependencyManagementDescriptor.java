@@ -1,6 +1,7 @@
 package com.netshoes.athena.domains;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -15,15 +16,23 @@ public class MavenDependencyManagementDescriptor implements DependencyManagement
 
   private final Artifact project;
   private final String dependencyDescriptorId;
-  private Optional<Artifact> parentArtifact;
+  private final AnalyzeExecution lastExecution;
+  private Optional<Artifact> parentArtifact = Optional.empty();
   private Optional<String> storagePath;
   private final Set<DependencyArtifact> dependencyArtifacts = new TreeSet<>();
   private final Set<DependencyArtifact> dependencyManagementArtifacts = new TreeSet<>();
 
-  public MavenDependencyManagementDescriptor(Artifact project, String storagePath) {
+  public MavenDependencyManagementDescriptor(
+      Artifact project, String storagePath, AnalyzeExecution lastExecution) {
     this.project = project;
     this.dependencyDescriptorId = project.getId();
     this.storagePath = Optional.ofNullable(storagePath);
+    this.lastExecution = lastExecution;
+  }
+
+  @Override
+  public String getName() {
+    return project.toString();
   }
 
   @Override
@@ -39,31 +48,26 @@ public class MavenDependencyManagementDescriptor implements DependencyManagement
   public List<Artifact> getArtifacts() {
     final List<Artifact> list = new ArrayList<>();
 
-    if (parentArtifact.isPresent()) {
-      list.add(parentArtifact.get());
-    }
-    if (dependencyArtifacts != null) {
-      list.addAll(dependencyArtifacts);
-    }
-    if (dependencyManagementArtifacts != null) {
-      list.addAll(dependencyManagementArtifacts);
-    }
+    parentArtifact.ifPresent(list::add);
+
+    list.addAll(dependencyArtifacts);
+    list.addAll(dependencyManagementArtifacts);
+
+    Collections.sort(list);
 
     return list;
   }
 
   @Override
   public Set<Technology> getRelatedTechnologies() {
-    return getArtifacts()
-        .stream()
+    return getArtifacts().stream()
         .flatMap(a -> a.getRelatedTechnologies().stream())
         .collect(Collectors.toSet());
   }
 
   @Override
   public Set<Artifact> getUnstableArtifacts() {
-    return getArtifacts()
-        .stream()
+    return getArtifacts().stream()
         .filter(a -> a.getReport().isPresent() && !a.getReport().get().isStable())
         .collect(Collectors.toCollection(TreeSet::new));
   }

@@ -12,3 +12,7 @@
 .topButtons .col2{
   text-align: right;
 }
+
+.icon-execution-fallback {
+  color: #f5222d;
+}

@@ -36,8 +36,7 @@ export class ProjectsList extends Component {
     if (this.props.refreshLoading && !nextProps.refreshLoading) {
       if (nextProps.refreshError) {
         message.error(nextProps.refreshErrorMessage, 5);
-      }
-      else {
+      } else {
         message.success("Refresh finished");
       }
     }
@@ -63,9 +62,10 @@ export class ProjectsList extends Component {
     this.props.refreshProject(projectId);
   }
 
-  selectProject(projectId, e) {
-    this.props.selectProject(projectId);
+  selectProject(project, e) {
+    this.props.selectProject(project);
     e.preventDefault();
+    console.log(e);
   }
 
   render() {
@@ -106,11 +106,19 @@ export class ProjectsList extends Component {
                 width="30%"
                 render={(text, record) => {
                   let result = [];
+                  if (record.lastAnalyzeExecutionHasFallback) {
+                    result.push(<Icon key="ief" type="close-circle"
+                                      theme="filled"
+                                      className="icon-execution-fallback"
+                                      title="One or more fallbacks was executed in the last analyze"/>);
+                    result.push(" ");
+                  }
                   result.push(text);
                   result.push(" ");
                   result.push(<Badge count={record.unstableArtifactsCount}
                                      key={"b-" + record.id}
                                      showZero={false}/>);
+
                   return (<span>{result}</span>);
                 }}
             />
@@ -163,8 +171,7 @@ export class ProjectsList extends Component {
                       </a> : null
                       }
                       <a href={"#"}
-                         onClick={this.selectProject.bind(this,
-                             record.projectId)}
+                         onClick={this.selectProject.bind(this, record)}
                          title={"View descriptors"}>
                             <Icon type="plus-circle-o"
                                   className={'action-btn'}/>

@@ -77,10 +77,21 @@ public class Artifact implements Serializable, Comparable {
 
   @Override
   public int compareTo(Object o) {
-    return Comparator.comparing(Artifact::getGroupId)
+    return Comparator.comparing(Artifact::getReport, this::compareVersionReport)
+        .thenComparing(
+            Artifact::getOrigin,
+            (o1, o2) -> Comparator.comparingInt(ArtifactOrigin::getOrder).compare(o1, o2))
+        .thenComparing(Artifact::getGroupId)
         .thenComparing(Artifact::getArtifactId)
         .thenComparing(Artifact::getVersion, Comparator.nullsFirst(Comparator.naturalOrder()))
         .thenComparing(Artifact::getOrigin)
         .compare(this, (Artifact) o);
+  }
+
+  private int compareVersionReport(
+      Optional<ArtifactVersionReport> opR1, Optional<ArtifactVersionReport> opR2) {
+    final boolean stable1 = opR1.map(ArtifactVersionReport::isStable).orElse(true);
+    final boolean stable2 = opR2.map(ArtifactVersionReport::isStable).orElse(true);
+    return !stable1 && stable2 ? -1 : 1;
   }
 }

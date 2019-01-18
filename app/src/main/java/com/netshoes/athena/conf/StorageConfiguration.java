@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @RequiredArgsConstructor
-@EnableConfigurationProperties({StorageProperties.class})
+@EnableConfigurationProperties(StorageProperties.class)
 public class StorageConfiguration {
   private final StorageProperties storageProperties;
 

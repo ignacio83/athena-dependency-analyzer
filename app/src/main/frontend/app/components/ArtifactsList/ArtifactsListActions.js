@@ -2,6 +2,8 @@ import axios from 'axios'
 
 export const REQUEST_ARTIFACTS = 'REQUEST_ARTIFACTS';
 export const RECEIVE_ARTIFACTS = 'RECEIVE_ARTIFACTS';
+export const VIEW_ERROR_LOG = 'VIEW_ERROR_LOG';
+export const CLOSE_ERROR_LOG = 'CLOSE_ERROR_LOG';
 
 function requestArtifacts(projectId, descriptorId) {
   return {
@@ -15,6 +17,18 @@ function receiveArtifacts(data) {
   return {
     type: RECEIVE_ARTIFACTS,
     list: data.artifacts
+  }
+}
+
+export function viewErrorLog() {
+  return {
+    type: VIEW_ERROR_LOG
+  }
+}
+
+export function closeErrorLog() {
+  return {
+    type: CLOSE_ERROR_LOG
   }
 }
 

@@ -9,7 +9,8 @@ import {
 
 const initialState = {
   list: [],
-  loading: false
+  loading: false,
+  selected: null
 };
 
 export default function reducer(state = initialState, action) {
@@ -17,7 +18,7 @@ export default function reducer(state = initialState, action) {
     case REQUEST_DESCRIPTORS:
       return Object.assign({}, state, {
         loading: true,
-        selectedId: null
+        selected: null
       });
 
     case RECEIVE_DESCRIPTORS:
@@ -28,7 +29,7 @@ export default function reducer(state = initialState, action) {
     case SELECT_DESCRIPTOR:
       return Object.assign({}, state, {
         loading: false,
-        selectedId: action.descriptorId
+        selected: action.descriptor
       });
     case REQUEST_DESCRIPTOR_CONTENT:
       return Object.assign({}, state, {

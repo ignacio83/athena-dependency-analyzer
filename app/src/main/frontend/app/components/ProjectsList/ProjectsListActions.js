@@ -8,10 +8,10 @@ export const REQUEST_REFRESH_PROJECT = 'REQUEST_REFRESH_PROJECT';
 export const RECEIVE_REFRESH_PROJECT = 'RECEIVE_REFRESH_PROJECT';
 export const REQUEST_REFRESH_PROJECT_FAILED = 'REQUEST_REFRESH_PROJECT_FAILED';
 
-export function selectProject(projectId) {
+export function selectProject(project) {
   return {
     type: SELECT_PROJECT,
-    projectId: projectId
+    project: project
   }
 }
 

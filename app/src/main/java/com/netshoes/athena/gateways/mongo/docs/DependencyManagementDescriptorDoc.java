@@ -1,5 +1,6 @@
 package com.netshoes.athena.gateways.mongo.docs;
 
+import com.netshoes.athena.domains.AnalyzeExecution;
 import com.netshoes.athena.domains.Artifact;
 import com.netshoes.athena.domains.DependencyManagementDescriptor;
 import com.netshoes.athena.domains.MavenDependencyManagementDescriptor;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class DependencyManagementDescriptorDoc implements Serializable {
   private ArtifactDoc project;
+  private AnalyzeExecutionDoc lastExecution = AnalyzeExecutionDoc.withoutDataDefault();
   private String storagePath;
   private List<DependencyArtifactDoc> artifacts;
 
@@ -25,13 +27,15 @@ public class DependencyManagementDescriptorDoc implements Serializable {
 
     this.project = new ArtifactDoc(domain.getProject());
     this.storagePath = domain.getStoragePath().orElse(null);
+    this.lastExecution = new AnalyzeExecutionDoc(domain.getLastExecution());
     this.artifacts = artifacts;
   }
 
   public DependencyManagementDescriptor toDomain() {
     final Artifact projectDomain = project.toDomain();
+    final AnalyzeExecution execution = lastExecution.toDomain();
     final MavenDependencyManagementDescriptor domain =
-        new MavenDependencyManagementDescriptor(projectDomain, storagePath);
+        new MavenDependencyManagementDescriptor(projectDomain, storagePath, execution);
 
     Optional<Artifact> parentArtifact = Optional.empty();
 

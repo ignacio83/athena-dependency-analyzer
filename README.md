@@ -20,6 +20,8 @@ Inside of java app the code is available at `src/main/java` and the frontend fil
 Run `Application` class from your IDE informing the following spring boot parameters: 
 - `application.github.organization`: Name of organization in Github.
 - `application.github.token`: Token for access the Github API.
+- `application.maven.localRepositoryDirectory`: Local repository for maven cache libraries, this is optional 
+if not provided the application will use a configured for your M2_HOME installation
 
 ### Running the frontend
 Go to `src/main/frontend` and run `npm start`. (Run `npm install` before that if it's the first time)
@@ -41,7 +43,24 @@ present already and tell webpack to generate our `bundle.js`. It's the equivalen
 
 ## Docker
 
-### Running
+### Building a new docker image
+    docker build -t netshoes/athena-dependency-analyzer .
+
+### Running Standalone
+    docker run -d -p 8080:8080 \
+    -e MONGO_URI=my_mongodb_uri \
+    -e RABBITMQ_ADDRESSES=my_rabbit_address \
+    -e RABBITMQ_HOST=my_rabbit_vhost \
+    -e RABBITMQ_USER=my_rabbit_user \
+    -e RABBITMQ_PASS=my_rabbit_pass  \
+    -e GITHUB_TOKEN=my_token \
+    -e GITHUB_HOST='api.github.com' \
+    -e GITHUB_ORGANIZATION=my_organization \
+    -e ADMIN_USERNAME=admin \
+    -e ADMIN_PASSWORD='{noop}admin' \
+    -t netshoes/athena-dependency-analyzer:latest
+
+### Running with Compose
     export GITHUB_HOST=api.github.com
     export GITHUB_ORGANIZATION=my_organization
     export GITHUB_TOKEN=my_token
@@ -50,12 +69,7 @@ present already and tell webpack to generate our `bundle.js`. It's the equivalen
     
     docker-compose up 
 
-### Building a new docker image
-
-    docker build -t netshoes/athena-dependency-analyzer .
-
-### Building a service on docker swarm
-
+### Running a service on docker swarm
     docker service create \
                         --name ${PROJECT} \ ## Name off de service on Swarm
                         --publish xxxx:8080 \   ## Port bind

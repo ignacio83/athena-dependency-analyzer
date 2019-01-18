@@ -12,4 +12,9 @@ public class SchedulersConfiguration {
   public Scheduler githubApiScheduler() {
     return Schedulers.newElastic("github-api");
   }
+
+  @Bean
+  public Scheduler mavenInvokerScheduler() {
+    return Schedulers.newElastic("maven-invoker");
+  }
 }

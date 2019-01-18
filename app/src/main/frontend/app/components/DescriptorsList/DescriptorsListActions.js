@@ -7,10 +7,10 @@ export const REQUEST_DESCRIPTOR_CONTENT = 'REQUEST_DESCRIPTOR_CONTENT';
 export const RECEIVE_DESCRIPTOR_CONTENT = 'RECEIVE_DESCRIPTOR_CONTENT';
 export const CLOSE_DESCRIPTOR_CONTENT = 'CLOSE_DESCRIPTOR_CONTENT_MODAL';
 
-export function selectDescriptor(descriptorId) {
+export function selectDescriptor(descriptor) {
   return {
     type: SELECT_DESCRIPTOR,
-    descriptorId: descriptorId
+    descriptor: descriptor
   }
 }
 

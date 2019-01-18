@@ -29,8 +29,8 @@ export class DescriptorsList extends Component {
     }
   }
 
-  onClickPlusIcon(descriptorId, e) {
-    this.props.selectDescriptor(descriptorId);
+  onClickPlusIcon(descriptor, e) {
+    this.props.selectDescriptor(descriptor);
     e.preventDefault();
   }
 
@@ -44,7 +44,7 @@ export class DescriptorsList extends Component {
     result.push(<a href='#'
                    key="anchorPlusIcon"
                    onClick={this.onClickPlusIcon.bind(
-                       this, record.id)}
+                       this, record)}
                    title='View dependencies'>
       <Icon type='plus-circle-o' className='action-btn'/>
     </a>);
@@ -72,6 +72,7 @@ export class DescriptorsList extends Component {
           <Table dataSource={this.props.descriptors}
                  rowKey={record => record.id}
                  loading={this.props.loading} className={'descriptors'}
+                 title={() => "Project: " + this.props.project.name}
                  size="small">
             <Column
                 title="Group Id"
@@ -86,6 +87,13 @@ export class DescriptorsList extends Component {
                 width="30%"
                 render={(text, record) => {
                   let result = [];
+                  if (record.lastExecution && record.lastExecution.fallback) {
+                    result.push(<Icon key="ief" type="close-circle"
+                                      theme="filled"
+                                      className="icon-execution-fallback"
+                                      title="A fallback was executed in the last analyze"/>);
+                    result.push(" ");
+                  }
                   result.push(text);
                   result.push(" ");
                   if (record.unstableArtifacts
@@ -131,8 +139,10 @@ DescriptorsList.propTypes = {
 
 const mapStateToProps = (state) => {
   return {
-    projectId: state.projects.selectedId,
-    descriptors: state.projects.selectedId ? state.descriptors.list : [],
+    project: state.projects.selected,
+    projectId: state.projects.selected != null
+        ? state.projects.selected.projectId : null,
+    descriptors: state.projects.selected ? state.descriptors.list : [],
     descriptorContent: state.descriptors.descriptorContent,
     showDescriptorContentModal: state.descriptors.showDescriptorContentModal,
     loading: state.descriptors.loading
