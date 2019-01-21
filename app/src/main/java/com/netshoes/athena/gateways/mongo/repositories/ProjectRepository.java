@@ -16,9 +16,11 @@ public interface ProjectRepository
   Flux<ProjectDoc> findAll(Pageable pageable);
 
   @Query(
-      "{ 'descriptors.artifacts.groupId' : ?0, "
-          + "'descriptors.artifacts.artifactId' : ?1, "
-          + "'descriptors.artifacts.version' : ?2 }")
+      "{ 'descriptors.artifacts' : {"
+          + "$elemMatch : {"
+          + "groupId : ?0,"
+          + "artifactId : ?1,"
+          + "version : ?2 } } }")
   Flux<ProjectDoc> findByDescriptorsArtifacts(
       String groupId, String artifactId, String version, Sort sort);
 }
