@@ -12,9 +12,10 @@ import org.slf4j.LoggerFactory;
 public class DependencyResolverOutputHandler implements InvocationOutputHandler {
   private static final String EMPTY = "";
   private static final String INITIAL_MARKUP = "The following files have been resolved:";
+  private static final String NONE = "none";
   private final Logger log = LoggerFactory.getLogger("mavenOutput");
   private final StringBuilder errorLog = new StringBuilder();
-  private boolean resolveDependenciesOutput = false;
+  private boolean resolveDependenciesOutput;
 
   @Getter private final List<Dependency> dependencies = new LinkedList<>();
 
@@ -23,12 +24,12 @@ public class DependencyResolverOutputHandler implements InvocationOutputHandler 
     log.debug(line);
     if (isError(line)) {
       final String trimmedLine = line.replaceFirst("\\[ERROR\\]", EMPTY).trim();
-      errorLog.append(trimmedLine).append("\n");
+      errorLog.append(trimmedLine).append('\n');
     } else {
       final String trimmedLine = line.replaceFirst("\\[INFO\\]", EMPTY).trim();
       if (INITIAL_MARKUP.equals(trimmedLine)) {
         resolveDependenciesOutput = true;
-      } else if (EMPTY.equals(trimmedLine) || "none".equals(trimmedLine)) {
+      } else if (EMPTY.equals(trimmedLine) || NONE.equals(trimmedLine)) {
         resolveDependenciesOutput = false;
       } else if (resolveDependenciesOutput) {
         final Dependency dependency = parseArtifact(trimmedLine);

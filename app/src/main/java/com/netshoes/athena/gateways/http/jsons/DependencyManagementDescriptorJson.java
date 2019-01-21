@@ -23,10 +23,10 @@ public class DependencyManagementDescriptorJson {
   @ApiModelProperty(value = "Project artifact of dependency management descriptor", required = true)
   private final ArtifactJson project;
 
-  @ApiModelProperty(value = "Parent artifact of dependency management descriptor")
+  @ApiModelProperty("Parent artifact of dependency management descriptor")
   private final ArtifactJson parent;
 
-  @ApiModelProperty(value = "Last execution of analyses")
+  @ApiModelProperty("Last execution of analyses")
   private final AnalyzeExecutionJson lastExecution;
 
   @ApiModelProperty(value = "Indicate if content was stored", required = true)

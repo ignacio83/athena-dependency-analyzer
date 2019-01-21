@@ -1,6 +1,5 @@
 package com.netshoes.athena.gateways.maven;
 
-import com.netshoes.athena.gateways.maven.MavenDependencyManagerGateway.ScmRepositoryContentDataPom;
 import lombok.Getter;
 
 public class CouldNotResolveDependenciesException extends RuntimeException {

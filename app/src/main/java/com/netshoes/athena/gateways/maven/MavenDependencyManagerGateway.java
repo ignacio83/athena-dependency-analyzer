@@ -95,7 +95,7 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
       ScmRepositoryContentDataPom contentDataPom,
       AnalyzeType originalAnalyzeType,
       Throwable error) {
-    final ScmRepositoryContentData scmRepositoryContentData = contentDataPom.contentData;
+    final ScmRepositoryContentData scmRepositoryContentData = contentDataPom.getContentData();
     final ScmRepositoryContent content = scmRepositoryContentData.getScmRepositoryContent();
     final String repositoryId = content.getRepository().getId();
 
@@ -121,7 +121,7 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
         repositoryId,
         descriptor.getProject());
 
-    final Project project = contentDataPom.project;
+    final Project project = contentDataPom.getProject();
     return Mono.just(execution)
         .map(exec -> new DependencyManagementDescriptorAnalyzeExecution(project, path, exec))
         .map(dExec -> new DependencyManagementDescriptorAnalyzeResult(dExec, descriptor));
@@ -140,7 +140,7 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
   private DependencyManagementDescriptorAnalyzeResult runDependencyCollectGoal(
       ScmRepositoryContentDataPom contentDataPom) throws MavenInvocationException {
 
-    final Path pom = contentDataPom.storagePath;
+    final Path pom = contentDataPom.getStoragePath();
     final InvocationRequest request = new DefaultInvocationRequest();
     request.setBaseDirectory(pom.getParent().toAbsolutePath().toFile());
     request.setPomFile(pom.toFile());
@@ -161,7 +161,7 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
       final List<Dependency> resolvedDependencies = output.getDependencies();
       log.debug("{} dependencies resolved.", resolvedDependencies.size());
 
-      final ScmRepositoryContentData scmRepositoryContentData = contentDataPom.contentData;
+      final ScmRepositoryContentData scmRepositoryContentData = contentDataPom.getContentData();
       final ScmRepositoryContent content = scmRepositoryContentData.getScmRepositoryContent();
       final Model model = getModel(scmRepositoryContentData);
 
@@ -174,7 +174,7 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
 
     final DependencyManagementDescriptorAnalyzeExecution execution =
         new DependencyManagementDescriptorAnalyzeExecution(
-            contentDataPom.project, contentDataPom.path, analyzeExecution);
+            contentDataPom.getProject(), contentDataPom.getPath(), analyzeExecution);
 
     return new DependencyManagementDescriptorAnalyzeResult(execution, descriptor);
   }
@@ -182,12 +182,12 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
   private void throwCouldNotResolveDependenciesException(
       InvocationResult result, ScmRepositoryContentDataPom contentDataPom, String mavenError) {
     final CommandLineException executionException = result.getExecutionException();
-    if (executionException != null) {
-      throw new CouldNotResolveDependenciesException(
-          "Maven execution failed.", contentDataPom, mavenError, executionException);
-    } else {
+    if (executionException == null) {
       throw new CouldNotResolveDependenciesException(
           "Maven execution failed.", contentDataPom, mavenError);
+    } else {
+      throw new CouldNotResolveDependenciesException(
+          "Maven execution failed.", contentDataPom, mavenError, executionException);
     }
   }
 
@@ -309,12 +309,13 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
         .forEach(consumer);
   }
 
-  private String replacePropertyIfNecessary(String value, Properties properties) {
-    if (value.startsWith("${")) {
-      final String propertyBinding = value.replaceFirst("\\$\\{", "").replaceFirst("}", "");
-      value = (String) properties.get(propertyBinding);
+  private String replacePropertyIfNecessary(final String value, final Properties properties) {
+    String result = value;
+    if (result.startsWith("${")) {
+      final String propertyBinding = result.replaceFirst("\\$\\{", "").replaceFirst("}", "");
+      result = (String) properties.get(propertyBinding);
     }
-    return value;
+    return result;
   }
 
   private List<ScmRepositoryContentDataPom> writePomsForMavenInvoker(
@@ -372,13 +373,5 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
         String.format(
             "%s/%s/%s",
             System.getProperty("java.io.tmpdir"), "athena/m2/workingDirectory", filePath));
-  }
-
-  @RequiredArgsConstructor
-  class ScmRepositoryContentDataPom {
-    private final Project project;
-    private final Path storagePath;
-    private final String path;
-    private final ScmRepositoryContentData contentData;
   }
 }

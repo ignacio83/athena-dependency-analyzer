@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class DependencyManagementDescriptorAnalyzeExecutionMongoGateway
     implements DependencyManagementDescriptorAnalyzeExecutionGateway {
-  private static int SIZE_10_MB = 1024 * 1024 * 10;
+  private static final int SIZE_10_MB = 1024 * 1024 * 10;
   private static final String COLLECTION_NAME = "dependencyManagementDescriptorAnalyzeExecution";
   private final DependencyManagementDescriptorAnalyzeExecutionRepository repository;
   private final MongoTemplate mongoTemplate;

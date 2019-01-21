@@ -1,26 +1,26 @@
-import axios from 'axios'
+import axios from "axios"
 
-export const SELECT_PROJECT = 'SELECT_PROJECT';
-export const REQUEST_PROJECTS = 'REQUEST_PROJECTS';
-export const RECEIVE_PROJECTS = 'RECEIVE_PROJECTS';
-export const RECEIVE_PROJECTS_COUNT = 'RECEIVE_PROJECTS_COUNT';
-export const REQUEST_REFRESH_PROJECT = 'REQUEST_REFRESH_PROJECT';
-export const RECEIVE_REFRESH_PROJECT = 'RECEIVE_REFRESH_PROJECT';
-export const REQUEST_REFRESH_PROJECT_FAILED = 'REQUEST_REFRESH_PROJECT_FAILED';
+export const SELECT_PROJECT = "SELECT_PROJECT";
+export const REQUEST_PROJECTS = "REQUEST_PROJECTS";
+export const RECEIVE_PROJECTS = "RECEIVE_PROJECTS";
+export const RECEIVE_PROJECTS_COUNT = "RECEIVE_PROJECTS_COUNT";
+export const REQUEST_REFRESH_PROJECT = "REQUEST_REFRESH_PROJECT";
+export const RECEIVE_REFRESH_PROJECT = "RECEIVE_REFRESH_PROJECT";
+export const REQUEST_REFRESH_PROJECT_FAILED = "REQUEST_REFRESH_PROJECT_FAILED";
 
 export function selectProject(project) {
   return {
     type: SELECT_PROJECT,
-    project: project
+    project
   }
 }
 
 function requestProjects(pageNumber, pageSize, search) {
   return {
     type: REQUEST_PROJECTS,
-    pageNumber: pageNumber,
-    pageSize: pageSize,
-    search: search
+    pageNumber,
+    pageSize,
+    search
   }
 }
 
@@ -84,8 +84,7 @@ function requestRefreshProjectFailed(error) {
   if (error.response && error.response.data && error.response.data.message) {
     errorMessage = error.response.data.message;
     console.log('An error occurred.', errorMessage);
-  }
-  else {
+  } else {
     errorMessage = error.toString();
     console.log('An error occurred.', error);
   }

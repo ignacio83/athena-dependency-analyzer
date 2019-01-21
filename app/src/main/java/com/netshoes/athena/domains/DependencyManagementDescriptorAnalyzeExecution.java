@@ -13,14 +13,6 @@ public class DependencyManagementDescriptorAnalyzeExecution {
   private final AnalyzeExecution execution;
 
   public DependencyManagementDescriptorAnalyzeExecution(
-      String projectId, String projectName, String descriptorPath, AnalyzeExecution execution) {
-    this.id = UUID.randomUUID().toString();
-    this.project = new EmbeddedProject(projectId, projectName);
-    this.descriptorPath = descriptorPath;
-    this.execution = execution;
-  }
-
-  public DependencyManagementDescriptorAnalyzeExecution(
       Project project, String descriptorPath, AnalyzeExecution execution) {
     this.id = UUID.randomUUID().toString();
     this.project = new EmbeddedProject(project.getId(), project.getName());

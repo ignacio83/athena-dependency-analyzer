@@ -1,11 +1,11 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
+import React, {Component} from "react";
+import {connect} from "react-redux";
 import PropTypes from "prop-types";
-import {Alert, Card, Icon, Modal, Table} from 'antd';
+import {Alert, Card, Icon, Modal, Table} from "antd";
 import UnstableVersionIndicator
   from "../UnstableVersionIndicator/UnstableVersionIndicator";
 import {bindActionCreators} from "redux";
-import './ArtifactsList.css'
+import "./ArtifactsList.css"
 import {
   closeErrorLog,
   listArtifacts,
@@ -216,9 +216,9 @@ const mapStateToProps = (state) => {
 function mapDispatchToProps(dispatch) {
   return bindActionCreators(
       {
-        listArtifacts: listArtifacts,
-        viewErrorLog: viewErrorLog,
-        closeErrorLog: closeErrorLog
+        listArtifacts,
+        viewErrorLog,
+        closeErrorLog
       }, dispatch);
 }
 
