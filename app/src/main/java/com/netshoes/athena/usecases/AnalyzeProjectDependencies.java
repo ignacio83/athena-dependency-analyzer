@@ -29,7 +29,7 @@ public class AnalyzeProjectDependencies {
         .flatMap(this::analyzeProject);
   }
 
-  private Mono<Project> analyzeProject(Project project) {
+  public Mono<Project> analyzeProject(Project project) {
     return Mono.just(project)
         .flatMapIterable(Project::getDescriptors)
         .flatMapIterable(DependencyManagementDescriptor::getArtifacts)
@@ -54,7 +54,8 @@ public class AnalyzeProjectDependencies {
             .flatMapMany(this::discoverTechnologies)
             .collect((Supplier<HashSet<Technology>>) HashSet::new, Set::add)
             .map(artifact::addRelatedTechnologies)
-            .doOnNext(this::logTechnologiesIfModified);
+            .doOnNext(this::logTechnologiesIfModified)
+            .cache();
 
     final Mono<Artifact> analyzeArtifact =
         this.analyzeArtifact

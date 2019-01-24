@@ -1,8 +1,8 @@
 package com.netshoes.athena.gateways.http;
 
 import com.netshoes.athena.gateways.http.jsons.ErrorJson;
-import com.netshoes.athena.gateways.http.jsons.ProjectJson;
 import com.netshoes.athena.gateways.http.jsons.RequestProjectScanJson;
+import com.netshoes.athena.gateways.http.jsons.ScanResultJson;
 import com.netshoes.athena.usecases.ProjectScan;
 import com.netshoes.athena.usecases.RequestProjectScan;
 import io.swagger.annotations.Api;
@@ -83,10 +83,10 @@ public class ProjectScanController {
         @ApiResponse(code = 422, message = "Scan failed", response = ErrorJson.class)
       })
   @SuppressWarnings("unused")
-  public Mono<ProjectJson> refreshNow(
+  public Mono<ScanResultJson> refreshNow(
       @ApiParam(value = "Id of Project") @PathVariable("projectId") String projectId,
       @RequestHeader String authorization) {
 
-    return projectScan.execute(projectId).map(ProjectJson::new);
+    return projectScan.execute(projectId).map(ScanResultJson::new);
   }
 }

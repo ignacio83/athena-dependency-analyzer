@@ -6,6 +6,7 @@ import lombok.Data;
 public class ScmRepositoryContent {
 
   private final ScmRepository repository;
+  private final String branch;
   private final String path;
   private final String name;
   private final ContentType type;
@@ -13,8 +14,14 @@ public class ScmRepositoryContent {
   private final long depth;
 
   public ScmRepositoryContent(
-      ScmRepository repository, String path, String name, ContentType type, long size) {
+      ScmRepository repository,
+      String branch,
+      String path,
+      String name,
+      ContentType type,
+      long size) {
     this.repository = repository;
+    this.branch = branch;
     this.path = path;
     this.name = name;
     this.type = type;

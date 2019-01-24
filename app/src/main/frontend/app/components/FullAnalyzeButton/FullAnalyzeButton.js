@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
-import {Button, message} from 'antd';
+import {Button, message, Tooltip} from 'antd';
 import {fullAnalyze} from "./FullAnalyzeButtonActions";
 
 export class FullAnalyzeButton extends Component {
@@ -14,8 +14,7 @@ export class FullAnalyzeButton extends Component {
     if (this.props.loading && !nextProps.loading) {
       if (nextProps.error) {
         message.error(nextProps.errorMessage, 5);
-      }
-      else {
+      } else {
         message.success(
             "Full analyze requested for all projects... The analyze is running in the background...");
       }
@@ -24,12 +23,12 @@ export class FullAnalyzeButton extends Component {
 
   render() {
     return (
-        <div>
+        <Tooltip
+            title="Analyze again dependencies of projects without sync projects"
+            placement="bottom">
           <Button loading={this.props.loading}
-                  onClick={this.fullAnalyze.bind(this)}>
-            Request full analyze
-          </Button>
-        </div>
+                  onClick={this.fullAnalyze.bind(this)} icon="audit"/>
+        </Tooltip>
     )
   }
 }

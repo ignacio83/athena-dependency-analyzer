@@ -21,6 +21,6 @@ public class RequestProjectScanJson {
   public RequestProjectScanJson(Project project) {
     this.id = project.getId();
     this.url = project.getScmRepository().getUrl().toString();
-    this.branch = project.getBranch();
+    this.branch = project.getBranch().getName();
   }
 }

@@ -108,7 +108,7 @@ export class ArtifactsList extends Component {
           alert.push(<Alert
               key="analyzeAlert"
               message={this.normalizeAnalyzeType(analyzeTypeExecuted)
-              + " analyze. Run again to resolved dependencies."}
+              + " analyze. Run again to resolve dependencies."}
               type="warning" showIcon/>);
         }
       }

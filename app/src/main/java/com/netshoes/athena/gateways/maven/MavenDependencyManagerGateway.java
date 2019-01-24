@@ -10,7 +10,7 @@ import com.netshoes.athena.domains.DependencyManagementDescriptorAnalyzeResult;
 import com.netshoes.athena.domains.DependencyScope;
 import com.netshoes.athena.domains.MavenDependencyManagementDescriptor;
 import com.netshoes.athena.domains.Project;
-import com.netshoes.athena.domains.ProjectAnalyzeRequest;
+import com.netshoes.athena.domains.ProjectCollectDependenciesRequest;
 import com.netshoes.athena.domains.ScmRepositoryContent;
 import com.netshoes.athena.domains.ScmRepositoryContentData;
 import com.netshoes.athena.gateways.DependencyManagerGateway;
@@ -59,14 +59,14 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
 
   @Override
   public Flux<DependencyManagementDescriptorAnalyzeResult> staticAnalyse(
-      ProjectAnalyzeRequest request) {
+      ProjectCollectDependenciesRequest request) {
     final List<ScmRepositoryContentDataPom> poms = writePomsForMavenInvoker(request);
     return Flux.fromIterable(poms).flatMap(this::staticAnalyse);
   }
 
   @Override
   public Flux<DependencyManagementDescriptorAnalyzeResult> resolveDependenciesAnalyse(
-      ProjectAnalyzeRequest request) {
+      ProjectCollectDependenciesRequest request) {
     final List<ScmRepositoryContentDataPom> poms = writePomsForMavenInvoker(request);
     final Flux<ScmRepositoryContentDataPom> flux = Flux.fromIterable(poms);
 
@@ -319,7 +319,7 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
   }
 
   private List<ScmRepositoryContentDataPom> writePomsForMavenInvoker(
-      ProjectAnalyzeRequest request) {
+      ProjectCollectDependenciesRequest request) {
     final List<ScmRepositoryContentDataPom> list = new LinkedList<>();
     for (ScmRepositoryContentData contentData : request.getList()) {
       final Path storagePath =
@@ -352,7 +352,7 @@ public class MavenDependencyManagerGateway implements DependencyManagerGateway {
     return newFile;
   }
 
-  private void deleteWorkingDirectoryMavenInvoker(ProjectAnalyzeRequest request) {
+  private void deleteWorkingDirectoryMavenInvoker(ProjectCollectDependenciesRequest request) {
     final String projectName = request.getProject().getScmRepository().getName();
     final Path projectRoot = buildWorkingDirectoryPath(projectName);
 

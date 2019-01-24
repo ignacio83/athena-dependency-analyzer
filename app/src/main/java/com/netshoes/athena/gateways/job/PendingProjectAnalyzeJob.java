@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class PendingProjectAnalyzeJob {
   private final RequestScanForPendingProjects requestScanForPendingProjects;
 
-  @Scheduled(fixedDelay = 1000 * 60 * 15)
+  @Scheduled(fixedDelay = 1000 * 60 * 60)
   public void run() {
     requestScanForPendingProjects.execute().blockLast();
   }

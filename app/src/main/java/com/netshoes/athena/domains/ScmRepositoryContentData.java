@@ -10,4 +10,5 @@ public class ScmRepositoryContentData {
   private final ScmRepositoryContent scmRepositoryContent;
   private final String data;
   private final long size;
+  private final String sha;
 }

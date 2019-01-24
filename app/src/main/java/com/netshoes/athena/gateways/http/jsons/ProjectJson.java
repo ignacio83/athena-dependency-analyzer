@@ -9,7 +9,6 @@ import com.netshoes.athena.domains.AnalyzeExecution;
 import com.netshoes.athena.domains.Artifact;
 import com.netshoes.athena.domains.DependencyManagementDescriptor;
 import com.netshoes.athena.domains.Project;
-import com.netshoes.athena.domains.ScmRepository;
 import com.netshoes.athena.gateways.http.DescriptorsController;
 import com.netshoes.athena.gateways.http.ProjectsController;
 import io.swagger.annotations.ApiModel;
@@ -43,10 +42,7 @@ public class ProjectJson extends ResourceSupport {
   private final String name;
 
   @ApiModelProperty(value = "Branch where scan was done", required = true)
-  private final String branch;
-
-  @ApiModelProperty(value = "Info about Source Control Management repository", required = true)
-  private final ScmRepositoryJson scmRepository;
+  private final ScmRepositoryBranchJson scmRepositoryBranch;
 
   @ApiModelProperty(value = "Date of last scan", required = true)
   private final OffsetDateTime lastCollectDate;
@@ -64,10 +60,8 @@ public class ProjectJson extends ResourceSupport {
   private final boolean lastAnalyzeExecutionHasFallback;
 
   public ProjectJson(Project domain) {
-    final ScmRepository domainScmRepository = domain.getScmRepository();
     this.name = domain.getName();
-    this.branch = domain.getBranch();
-    this.scmRepository = new ScmRepositoryJson(domainScmRepository);
+    this.scmRepositoryBranch = new ScmRepositoryBranchJson(domain.getBranch());
     this.projectId = domain.getId();
     this.lastCollectDate =
         OffsetDateTime.of(

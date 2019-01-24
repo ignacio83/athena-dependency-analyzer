@@ -40,8 +40,7 @@ public class RabbitAsynchronousProcessGateway implements AsynchronousProcessGate
 
   private static ProjectScanRequestJson toProjectScanRequestJson(Project p) {
     final ScmRepository repository = p.getScmRepository();
-    final String repositoryId = repository.getId();
-    return new ProjectScanRequestJson(p.getId(), repositoryId, p.getBranch());
+    return new ProjectScanRequestJson(p.getId(), repository.getId(), p.getBranch().getName());
   }
 
   private Mono<ProjectDependenciesAnalyzeRequestJson> enqueue(

@@ -5,14 +5,17 @@ import com.netshoes.athena.domains.DependencyManagementDescriptorAnalyzeResult;
 import com.netshoes.athena.domains.File;
 import com.netshoes.athena.domains.PendingProjectAnalyze;
 import com.netshoes.athena.domains.Project;
-import com.netshoes.athena.domains.ProjectAnalyzeRequest;
+import com.netshoes.athena.domains.ProjectCollectDependenciesRequest;
+import com.netshoes.athena.domains.ProjectScanResult;
 import com.netshoes.athena.domains.ScmRepository;
+import com.netshoes.athena.domains.ScmRepositoryBranch;
 import com.netshoes.athena.domains.ScmRepositoryContent;
 import com.netshoes.athena.domains.ScmRepositoryContentData;
 import com.netshoes.athena.gateways.CouldNotGetRepositoryContentException;
 import com.netshoes.athena.gateways.DependencyManagementDescriptorAnalyzeExecutionGateway;
 import com.netshoes.athena.gateways.DependencyManagerGateway;
 import com.netshoes.athena.gateways.FileStorageGateway;
+import com.netshoes.athena.gateways.GetRepositoryException;
 import com.netshoes.athena.gateways.PendingProjectAnalyzeGateway;
 import com.netshoes.athena.gateways.ProjectGateway;
 import com.netshoes.athena.gateways.ScmApiGatewayRateLimitExceededException;
@@ -22,12 +25,14 @@ import com.netshoes.athena.usecases.exceptions.ProjectScanException;
 import com.netshoes.athena.usecases.exceptions.ScmApiRateLimitExceededException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 @Slf4j
 @Service
@@ -45,25 +50,31 @@ public class ProjectScan {
   private final AnalyzeProjectDependencies analyzeProjectDependencies;
   private final FeatureProperties featureProperties;
 
-  public Mono<Project> execute(String projectId, String repositoryId, String branch) {
-    final Mono<Project> project =
-        projectGateway
-            .findById(projectId)
-            .switchIfEmpty(createProjectFromScm(repositoryId, branch));
+  public Mono<ProjectScanResult> execute(String projectId, String repositoryId, String branch) {
+    final Mono<Project> project = projectGateway.findById(projectId).cache();
+
+    final Mono<ProjectScanResult> deletePendingAnalyzeWhenRepositoryNoLongerExists =
+        pendingProjectAnalyzeGateway
+            .delete(projectId)
+            .then(project)
+            .map(ProjectScanResult::noExecution);
 
     return project
+        .switchIfEmpty(createProjectFromScm(repositoryId, branch))
         .flatMap(this::execute)
-        .then(project)
+        .switchIfEmpty(deletePendingAnalyzeWhenRepositoryNoLongerExists)
         .onErrorResume(CouldNotGetRepositoryContentException.class, exception -> Mono.empty())
+        .onErrorResume(GetRepositoryException.class, exception -> Mono.empty())
         .onErrorResume(
             Exception.class,
             exception ->
                 scheduleToLater(repositoryId, branch, exception)
-                    .map(PendingProjectAnalyze::getProject));
+                    .map(PendingProjectAnalyze::getProject)
+                    .map(p -> new ProjectScanResult(p, false, false)));
   }
 
   private Mono<PendingProjectAnalyze> scheduleToLater(
-      String repositoryId, String branch, Exception e) {
+      String repositoryId, String branchName, Exception e) {
     return scmGateway
         .getRateLimit()
         .onErrorResume(
@@ -75,10 +86,10 @@ public class ProjectScan {
         .defaultIfEmpty(LocalDateTime.now().plusMinutes(5))
         .map(
             scheduledDate -> {
-              final ScmRepository scmRepository = new ScmRepository();
-              scmRepository.setId(repositoryId);
+              final ScmRepositoryBranch branch =
+                  ScmRepositoryBranch.offline(branchName, repositoryId);
 
-              final Project project = new Project(scmRepository, branch);
+              final Project project = new Project(branch);
               final PendingProjectAnalyze pendingProjectAnalyze =
                   new PendingProjectAnalyze(project);
               pendingProjectAnalyze.setException(e);
@@ -96,55 +107,82 @@ public class ProjectScan {
                     e));
   }
 
-  private Mono<Project> createProjectFromScm(String repositoryId, String branch) {
+  private Mono<Project> createProjectFromScm(String repositoryId, String branchName) {
     return scmGateway
         .getRepository(repositoryId)
         .onErrorMap(ProjectScanException::new)
-        .map(repository -> new Project(repository, branch));
+        .flatMap(repository -> scmGateway.getBranch(repository, branchName))
+        .map(Project::new);
   }
 
-  public Mono<Project> execute(String projectId) {
+  public Mono<ProjectScanResult> execute(String projectId) {
     return projectGateway
         .findById(projectId)
         .switchIfEmpty(Mono.defer(() -> Mono.error(new ProjectNotFoundException(projectId))))
         .flatMap(this::execute);
   }
 
-  public Mono<Project> execute(Project project) {
-    final Mono<Project> runAnalyses =
-        findDependencyManagerDescriptors(project)
-            .doOnNext(this::logRepositoryContent)
-            .collectList()
-            .map(list -> new ProjectAnalyzeRequest(project, list))
-            .flatMapMany(this::analyzeContentsOnErrorResume)
+  public Mono<ProjectScanResult> execute(Project inputProject) {
+    return pendingProjectAnalyzeGateway
+        .delete(inputProject.getId())
+        .then(
+            refreshScmRepositoryData(inputProject)
+                .flatMap(
+                    project -> {
+                      Mono<? extends Project> mono;
+                      final boolean collectDependencies = project != inputProject;
+                      if (collectDependencies) {
+                        mono =
+                            this.findDescriptorsManagersContentData(project)
+                                .map(descriptors -> Tuples.of(project, descriptors))
+                                .map(
+                                    projectAndDescriptors ->
+                                        new ProjectCollectDependenciesRequest(
+                                            projectAndDescriptors.getT1(),
+                                            projectAndDescriptors.getT2()))
+                                .flatMap(this::collectDependencies)
+                                .flatMap(this::saveProjectOnErrorResume);
+                      } else {
+                        mono = Mono.just(project);
+                      }
+                      return mono.flatMap(analyzeProjectDependencies::analyzeProject)
+                          .map(p -> new ProjectScanResult(p, collectDependencies, true));
+                    }));
+  }
+
+  private Mono<List<ScmRepositoryContentData>> findDescriptorsManagersContentData(Project project) {
+    return findDependencyManagerDescriptors(project)
+        .doOnNext(this::logRepositoryContent)
+        .collectList();
+  }
+
+  private Mono<? extends Project> collectDependencies(ProjectCollectDependenciesRequest request) {
+    final Project project = request.getProject();
+    final Mono<Project> collectDependencies =
+        collectDependenciesOnErrorResume(request)
             .flatMap(
                 result ->
                     dependencyManagementDescriptorAnalyzeExecutionGateway
                         .save(result.getExecution())
                         .thenReturn(result))
             .map(DependencyManagementDescriptorAnalyzeResult::getDependencyManagementDescriptor)
-            .collect(() -> project, Project::addDependencyManagerDescriptor)
-            .flatMap(this::saveProjectOnErrorResume)
-            .map(Project::getId)
-            .flatMap(analyzeProjectDependencies::analyzeProject);
+            .collect(() -> project, Project::addDependencyManagerDescriptor);
 
-    final Mono<Project> logAnalysisStart = Mono.fromCallable(() -> this.logAnalyzesStart(project));
-    final Mono<Void> deletePendingAnalyzes = pendingProjectAnalyzeGateway.delete(project.getId());
+    final Mono<Project> logStart =
+        Mono.fromCallable(() -> this.logCollectDependenciesStart(request));
     final Mono<Project> clearProjectDescriptor =
         Mono.fromCallable(project::clearDependencyManagerDescriptors);
 
-    return logAnalysisStart
-        .thenMany(deletePendingAnalyzes)
-        .then(clearProjectDescriptor)
-        .then(runAnalyses);
+    return logStart.then(clearProjectDescriptor).then(collectDependencies);
   }
 
-  private Project logAnalyzesStart(Project p) {
+  private Project logCollectDependenciesStart(ProjectCollectDependenciesRequest request) {
+    final Project project = request.getProject();
     log.info(
-        "Starting analysis of repository {} in branch {} ...",
-        p.getScmRepository().getId(),
-        p.getBranch());
-    return p;
+        "Collecting dependencies of repository {} in branch {} ...",
+        project.getScmRepository().getId(),
+        project.getBranch().getName());
+    return project;
   }
 
   private void logRepositoryContent(ScmRepositoryContentData data) {
@@ -156,11 +194,30 @@ public class ProjectScan {
     }
   }
 
+  private Mono<Project> refreshScmRepositoryData(Project inputProject) {
+    final ScmRepositoryBranch inputBranch = inputProject.getBranch();
+    return scmGateway
+        .getRepository(inputProject.getScmRepository().getId())
+        .flatMap(repository -> scmGateway.getBranch(repository, inputBranch.getName()))
+        .map(
+            branch -> {
+              final boolean modified =
+                  branch.modified(inputBranch) || inputProject.neverCollected();
+              if (!modified) {
+                log.warn(
+                    "Branch {} of Repository {} was not modified.",
+                    branch.getName(),
+                    branch.getScmRepository().getId());
+              }
+              return modified ? inputProject.scmRepositoryBranch(branch) : inputProject;
+            });
+  }
+
   private Flux<ScmRepositoryContentData> findDependencyManagerDescriptors(Project project) {
     final ScmRepository scmRepository = project.getScmRepository();
-    final String branch = project.getBranch();
+    final String branchName = project.getBranch().getName();
     return scmGateway
-        .getContents(scmRepository, branch, "/")
+        .getContents(scmRepository, branchName, "/")
         .expandDeep(
             content -> {
               if (content.isDirectory() && content.getDepth() <= MAX_DIRECTORY_DEPTH) {
@@ -172,7 +229,7 @@ public class ProjectScan {
                     scmRepository.getId());
 
                 return scmGateway
-                    .getContents(scmRepository, branch, path)
+                    .getContents(scmRepository, branchName, path)
                     .onErrorResume(
                         CouldNotGetRepositoryContentException.class, exception -> Mono.empty())
                     .onErrorMap(
@@ -216,15 +273,15 @@ public class ProjectScan {
     return new ScmApiRateLimitExceededException(e, e.getMinutesToReset());
   }
 
-  private Flux<DependencyManagementDescriptorAnalyzeResult> analyzeContentsOnErrorResume(
-      ProjectAnalyzeRequest project) {
+  private Flux<DependencyManagementDescriptorAnalyzeResult> collectDependenciesOnErrorResume(
+      ProjectCollectDependenciesRequest request) {
     Flux<DependencyManagementDescriptorAnalyzeResult> results;
     try {
       final boolean enabled = featureProperties.getDependencyResolution().isEnabled();
       results =
           enabled
-              ? dependencyManagerGateway.resolveDependenciesAnalyse(project)
-              : dependencyManagerGateway.staticAnalyse(project);
+              ? dependencyManagerGateway.resolveDependenciesAnalyse(request)
+              : dependencyManagerGateway.staticAnalyse(request);
     } catch (Exception e) {
       results = Flux.empty();
       log.error(e.getMessage(), e);

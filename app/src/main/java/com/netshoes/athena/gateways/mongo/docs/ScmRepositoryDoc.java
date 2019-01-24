@@ -3,6 +3,11 @@ package com.netshoes.athena.gateways.mongo.docs;
 import com.netshoes.athena.domains.ScmRepository;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,6 +20,7 @@ public class ScmRepositoryDoc {
   private String description;
   private String url;
   private String masterBranch;
+  private LocalDateTime lastPushDate;
 
   public ScmRepositoryDoc(ScmRepository domain) {
     this.id = domain.getId();
@@ -22,6 +28,7 @@ public class ScmRepositoryDoc {
     this.description = domain.getDescription();
     this.url = domain.getUrl() != null ? domain.getUrl().toString() : null;
     this.masterBranch = domain.getMasterBranch();
+    domain.getLastPushDate().ifPresent(dateTime -> this.lastPushDate = dateTime.toLocalDateTime());
   }
 
   public ScmRepository toDomain() {
@@ -30,6 +37,12 @@ public class ScmRepositoryDoc {
     domain.setName(name);
     domain.setDescription(description);
     domain.setMasterBranch(masterBranch);
+    if (lastPushDate != null) {
+      final OffsetDateTime offsetDateTime =
+          OffsetDateTime.of(
+              lastPushDate, ZoneOffset.systemDefault().getRules().getOffset(Instant.now()));
+      domain.setLastPushDate(Optional.of(offsetDateTime));
+    }
     if (url != null) {
       try {
         domain.setUrl(new URL(url));

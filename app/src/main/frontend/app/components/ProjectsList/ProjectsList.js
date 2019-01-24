@@ -18,7 +18,8 @@ import {
   message,
   Row,
   Switch,
-  Table
+  Table,
+  Tooltip
 } from 'antd';
 import TechnologyIndicator from "../TechnologyIndicator/TechnologyIndicator";
 import './ProjectsList.css';
@@ -35,9 +36,9 @@ export class ProjectsList extends Component {
   componentWillUpdate(nextProps) {
     if (this.props.refreshLoading && !nextProps.refreshLoading) {
       if (nextProps.refreshError) {
-        message.error(nextProps.refreshErrorMessage, 5);
+        message.error(nextProps.refreshMessage, 5);
       } else {
-        message.success("Refresh finished");
+        message.success(nextProps.refreshMessage);
       }
     }
   }
@@ -103,7 +104,7 @@ export class ProjectsList extends Component {
                 title="Name"
                 dataIndex="name"
                 key="name"
-                width="30%"
+                width="20%"
                 render={(text, record) => {
                   let result = [];
                   if (record.lastAnalyzeExecutionHasFallback) {
@@ -124,12 +125,12 @@ export class ProjectsList extends Component {
             />
             <Column
                 title="Branch"
-                dataIndex="branch"
+                dataIndex="scmRepositoryBranch.name"
                 key="branch"
                 width="10%"
             />
             <Column
-                title="Last updated"
+                title="Last collect"
                 dataIndex="lastCollectDate"
                 key="lastCollectDate"
                 width="15%"
@@ -141,10 +142,27 @@ export class ProjectsList extends Component {
                         year="numeric"/>
                 )}/>
             <Column
+                title="Last push"
+                dataIndex="scmRepositoryBranch.repository.lastPushDate"
+                key="lastPushDate"
+                width="15%"
+                render={(text, record) => (
+                    text &&
+                    <Tooltip title={record.scmRepositoryBranch.lastCommitSha}>
+                      <div>
+                        <FormattedTime
+                            value={text}
+                            day="numeric"
+                            month="numeric"
+                            year="numeric"/>
+                      </div>
+                    </Tooltip>
+                )}/>
+            <Column
                 title="Technologies"
                 dataIndex="relatedTechnologies"
                 key="technologies"
-                width="35%"
+                width="30%"
                 render={(techs) => {
                   let result = [];
                   techs.forEach(tech => {
@@ -159,7 +177,8 @@ export class ProjectsList extends Component {
                 width="10%"
                 render={(text, record) => (
                     <span>
-                          <a href={record.scmRepository.url} target={"_blank"}>
+                          <a href={record.scmRepositoryBranch.repository.url}
+                             target={"_blank"}>
                             <Icon type="github" className={'action-btn'}/>
                           </a>
                       {this.props.isAdmin ? <a href={"#"}
@@ -197,7 +216,7 @@ const mapStateToProps = (state) => {
     loading: state.projects.loading,
     refreshLoading: state.projects.refreshLoading,
     refreshError: state.projects.refreshError,
-    refreshErrorMessage: state.projects.refreshErrorMessage,
+    refreshMessage: state.projects.refreshMessage,
     search: state.projects.search,
     isAdmin: state.auth.logged ? state.auth.auth.isAdmin : false
   }

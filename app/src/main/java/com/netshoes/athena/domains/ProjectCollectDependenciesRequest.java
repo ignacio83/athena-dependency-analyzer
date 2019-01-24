@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class ProjectAnalyzeRequest {
+public class ProjectCollectDependenciesRequest {
   private final Project project;
   private final List<ScmRepositoryContentData> list;
 }

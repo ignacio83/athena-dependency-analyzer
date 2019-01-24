@@ -74,23 +74,28 @@ function requestRefreshProject(projectId) {
 function receiveRefreshProject(data) {
   return {
     type: RECEIVE_REFRESH_PROJECT,
-    project: data,
+    project: data.project,
+    message: data.dependenciesCollected ? "Refresh completed"
+        : "Refresh completed without collect dependencies. Repository was not modified",
     receivedAt: Date.now()
   }
 }
 
 function requestRefreshProjectFailed(error) {
-  let errorMessage;
+  let message;
   if (error.response && error.response.data && error.response.data.message) {
-    errorMessage = error.response.data.message;
-    console.log('An error occurred.', errorMessage);
-  } else {
-    errorMessage = error.toString();
+    message = error.response.data.message;
+    console.log('An error occurred.', message);
+  }
+
+  if (!message) {
+    message = error.toString();
     console.log('An error occurred.', error);
   }
+
   return {
     type: REQUEST_REFRESH_PROJECT_FAILED,
-    message: errorMessage
+    message
   }
 }
 

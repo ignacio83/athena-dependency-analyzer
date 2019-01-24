@@ -2,6 +2,7 @@ package com.netshoes.athena.usecases;
 
 import com.netshoes.athena.domains.Project;
 import com.netshoes.athena.domains.ScmRepository;
+import com.netshoes.athena.domains.ScmRepositoryBranch;
 import com.netshoes.athena.gateways.AsynchronousProcessGateway;
 import com.netshoes.athena.gateways.GetRepositoryException;
 import com.netshoes.athena.gateways.ScmApiGatewayRateLimitExceededException;
@@ -36,9 +37,13 @@ public class RequestProjectScan {
         repository -> forBranchOfRepository(repository.getMasterBranch(), repository));
   }
 
-  public Mono<Project> forBranchOfRepository(String branch, ScmRepository repository) {
-    final Mono<Project> projectMono = Mono.just(repository).map(r -> new Project(r, branch));
+  public Mono<Project> forBranchOfRepository(ScmRepositoryBranch scmRepositoryBranch) {
+    final Mono<Project> projectMono = Mono.just(scmRepositoryBranch).map(Project::new).cache();
     return projectMono.flatMap(asynchronousProcessGateway::requestProjectScan).then(projectMono);
+  }
+
+  public Mono<Project> forBranchOfRepository(String branch, ScmRepository repository) {
+    return forBranchOfRepository(ScmRepositoryBranch.offline(branch, repository));
   }
 
   public Mono<Project> refresh(String projectId) throws ProjectNotFoundException {

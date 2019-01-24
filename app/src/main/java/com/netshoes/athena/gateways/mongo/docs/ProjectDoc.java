@@ -3,6 +3,7 @@ package com.netshoes.athena.gateways.mongo.docs;
 import com.netshoes.athena.domains.DependencyManagementDescriptor;
 import com.netshoes.athena.domains.Project;
 import com.netshoes.athena.domains.ScmRepository;
+import com.netshoes.athena.domains.ScmRepositoryBranch;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,31 +41,33 @@ public class ProjectDoc implements Serializable {
   @Id private String id;
   @Indexed private String name;
   private String branch;
+  private String lastCommitSha;
   private ScmRepositoryDoc scmRepository;
   private List<DependencyManagementDescriptorDoc> descriptors;
   @LastModifiedDate private LocalDateTime lastCollectDate;
 
   public ProjectDoc(Project domain) {
-    final ScmRepository domainScmRepository = domain.getScmRepository();
+    final ScmRepositoryBranch domainBranch = domain.getBranch();
     this.id = domain.getId();
     this.name = domain.getName();
-    this.branch = domain.getBranch();
+    this.branch = domainBranch.getName();
+    this.lastCommitSha = domainBranch.getLastCommitSha();
 
     final Set<DependencyManagementDescriptor> domainDescriptors = domain.getDescriptors();
     this.descriptors =
-        domainDescriptors
-            .stream()
+        domainDescriptors.stream()
             .map(DependencyManagementDescriptorDoc::new)
             .collect(Collectors.toList());
-    this.scmRepository = new ScmRepositoryDoc(domainScmRepository);
+    this.scmRepository = new ScmRepositoryDoc(domain.getScmRepository());
   }
 
   public Project toDomain(boolean includeDescriptors) {
     final ScmRepository scmRepositoryDomain = scmRepository.toDomain();
-    final Project project = new Project(scmRepositoryDomain, branch, lastCollectDate);
+    final ScmRepositoryBranch scmRepositoryBranch =
+        new ScmRepositoryBranch(branch, lastCommitSha, scmRepositoryDomain);
+    final Project project = new Project(scmRepositoryBranch, lastCollectDate);
     if (includeDescriptors) {
-      descriptors
-          .stream()
+      descriptors.stream()
           .map(DependencyManagementDescriptorDoc::toDomain)
           .forEach(d -> project.addDependencyManagerDescriptor(d));
     }

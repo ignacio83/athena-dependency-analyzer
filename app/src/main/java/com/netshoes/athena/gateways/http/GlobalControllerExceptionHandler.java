@@ -22,6 +22,7 @@ public class GlobalControllerExceptionHandler {
   private static final String SCM_API_RATE_LIMIT_EXCEEDED_EXCEPTION_KEY =
       "scmApi.rateLimit.exceeded";
   private static final String DOMAIN_NOT_FOUND_EXCEPTION_KEY = "domain.notFound.error";
+  private static final String DOMAIN_NOT_MODIFIED_EXCEPTION_KEY = "domain.notModified.error";
   private static final String DOMAIN_ALREADY_EXISTS_EXCEPTION_KEY = "domain.alreadyExists.error";
   private static final String VALIDATION_EXCEPTION_KEY = "domain.validation.error";
   private static final String EXCEPTION_KEY = "internal.error";

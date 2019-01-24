@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux'
 import {fullScan} from './FullScanButtonActions';
 import {bindActionCreators} from 'redux'
-import {Button, message} from 'antd';
+import {Button, message, Tooltip} from 'antd';
 
 export class FullScanButton extends Component {
 
@@ -14,8 +14,7 @@ export class FullScanButton extends Component {
     if (this.props.loading && !nextProps.loading) {
       if (nextProps.error) {
         message.error(nextProps.errorMessage, 5);
-      }
-      else {
+      } else {
         message.success(
             "Scan requested for " + nextProps.projects.length
             + " projects... The scan is running in the background...");
@@ -25,12 +24,13 @@ export class FullScanButton extends Component {
 
   render() {
     return (
-        <div>
+        <Tooltip
+            title="Scan all repositories of organization, collecting and analyzing dependencies"
+            placement="bottom">
           <Button loading={this.props.loading}
-                  onClick={this.fullScan.bind(this)}>
-            Request full scan
-          </Button>
-        </div>
+                  onClick={this.fullScan.bind(this)}
+                  icon="sync"/>
+        </Tooltip>
     )
   }
 }

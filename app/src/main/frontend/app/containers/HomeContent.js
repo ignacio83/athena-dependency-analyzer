@@ -4,7 +4,8 @@ import FullScanButton from "../components/FullScanButton/FullScanButton";
 import ProjectsList from "../components/ProjectsList/ProjectsList";
 import DescriptorsList from "../components/DescriptorsList/DescriptorsList";
 import ArtifactsList from "../components/ArtifactsList/ArtifactsList";
-import FullAnalyzeButton from "../components/FullAnalyzeButton/FullAnalyzeButton";
+import FullAnalyzeButton
+  from "../components/FullAnalyzeButton/FullAnalyzeButton";
 import {connect} from "react-redux";
 
 export class HomeContent extends Component {
@@ -13,12 +14,8 @@ export class HomeContent extends Component {
     return (
         <div>
           {this.props.isAdmin ? <Row className="topButtons">
-            <Col span={12} className="col1">
-              <FullAnalyzeButton/>
-            </Col>
-            <Col span={12} className="col2">
-              <FullScanButton/>
-            </Col>
+            <FullScanButton/>
+            <FullAnalyzeButton/>
           </Row> : null}
           <Row>
             <Col span={24}>
@@ -32,7 +29,7 @@ export class HomeContent extends Component {
                   <DescriptorsList title="Dependency Management Descriptors"/>
                 </Col>
                 <Col span={12}>
-                  <ArtifactsList title="Artifacts" titleSeparator=" for "/>
+                  <ArtifactsList title="Artifacts"/>
                 </Col>
               </Row>
             </Col>

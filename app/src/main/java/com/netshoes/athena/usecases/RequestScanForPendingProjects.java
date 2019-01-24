@@ -3,18 +3,18 @@ package com.netshoes.athena.usecases;
 import com.netshoes.athena.domains.PendingProjectAnalyze;
 import com.netshoes.athena.domains.Project;
 import com.netshoes.athena.domains.ScmApiRateLimit;
-import com.netshoes.athena.domains.ScmRepository;
 import com.netshoes.athena.gateways.PendingProjectAnalyzeGateway;
 import com.netshoes.athena.gateways.ScmApiGetRateLimitException;
 import com.netshoes.athena.gateways.ScmGateway;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class RequestScanForPendingProjects {
 
@@ -39,8 +39,7 @@ public class RequestScanForPendingProjects {
 
   private Mono<Project> executeForPendingProject(PendingProjectAnalyze pendingProjectAnalyze) {
     final Project project = pendingProjectAnalyze.getProject();
-    final ScmRepository repository = project.getScmRepository();
-    return requestProjectScan.forBranchOfRepository(project.getBranch(), repository);
+    return requestProjectScan.forBranchOfRepository(project.getBranch());
   }
 
   private boolean hasSufficientRemainingRequests(ScmApiRateLimit rateLimit) {

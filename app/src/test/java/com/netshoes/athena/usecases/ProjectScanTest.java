@@ -3,6 +3,7 @@ package com.netshoes.athena.usecases;
 import static br.com.six2six.fixturefactory.Fixture.from;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,7 @@ import com.netshoes.athena.domains.PendingProjectAnalyze;
 import com.netshoes.athena.domains.ScmApiRateLimit;
 import com.netshoes.athena.domains.ScmApiRateLimitTemplateLoader;
 import com.netshoes.athena.domains.ScmRepository;
+import com.netshoes.athena.domains.ScmRepositoryBranch;
 import com.netshoes.athena.domains.ScmRepositoryTemplateLoader;
 import com.netshoes.athena.gateways.DependencyManagementDescriptorAnalyzeExecutionGateway;
 import com.netshoes.athena.gateways.DependencyManagerGateway;
@@ -76,13 +78,18 @@ public class ProjectScanTest {
   public void whenProjectDoNotExistsRequestsAvailableButExhausted() {
     final ScmRepository scmRepository =
         from(ScmRepository.class).gimme(ScmRepositoryTemplateLoader.DEFAULT);
+    final ScmRepositoryBranch scmRepositoryBranch =
+        new ScmRepositoryBranch(scmRepository.getMasterBranch(), "sha", scmRepository);
     final ScmApiRateLimit scmApiRateLimit =
         from(ScmApiRateLimit.class)
             .gimme(ScmApiRateLimitTemplateLoader.TEN_PERCENT_AVAILABLE_NO_CONFIGURED_LIMIT);
 
+    when(pendingProjectAnalyzeGateway.delete(anyString())).thenReturn(Mono.just("").then());
     when(projectGateway.findById(eq("NONE"))).thenReturn(Mono.empty());
     when(scmGateway.getRepository(eq(scmRepository.getId()))).thenReturn(Mono.just(scmRepository));
-    when(scmGateway.getContents(eq(scmRepository), eq(scmRepository.getMasterBranch()), eq("/")))
+    when(scmGateway.getBranch(eq(scmRepository), eq(scmRepositoryBranch.getName())))
+        .thenReturn(Mono.just(scmRepositoryBranch));
+    when(scmGateway.getContents(eq(scmRepository), eq(scmRepositoryBranch.getName()), eq("/")))
         .thenThrow(new ScmApiGatewayRateLimitExceededException(new IOException("Mocked"), 1000L));
     when(scmGateway.getRateLimit()).thenReturn(Mono.just(scmApiRateLimit));
 
@@ -94,8 +101,8 @@ public class ProjectScanTest {
     StepVerifier.create(
             projectScan.execute("NONE", scmRepository.getId(), scmRepository.getMasterBranch()))
         .expectNextMatches(
-            project -> {
-              assertThat(project.getScmRepository().getId())
+            result -> {
+              assertThat(result.getProject().getScmRepository().getId())
                   .isEqualTo("netshoes/default-repository");
               return true;
             })
