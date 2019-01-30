@@ -9,5 +9,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 public class MavenProperties {
   private String home = System.getenv("MAVEN_HOME");
-  private String localRepositoryDirectory;
+  private String localRepositoryDirectory = System.getenv("MAVEN_LOCAL_REPOSITORY");
 }

@@ -20,8 +20,10 @@ Inside of java app the code is available at `src/main/java` and the frontend fil
 Run `Application` class from your IDE informing the following spring boot parameters: 
 - `application.github.organization`: Name of organization in Github.
 - `application.github.token`: Token for access the Github API.
+- `application.maven.home`: Location of your maven installation, this is optional 
+if not provided the application will use a configured for your MAVEN_HOME environment variable
 - `application.maven.localRepositoryDirectory`: Local repository for maven cache libraries, this is optional 
-if not provided the application will use a configured for your M2_HOME installation
+if not provided the application will use a configured for your MAVEN_LOCAL_REPOSITORY environment variable
 
 ### Running the frontend
 Go to `src/main/frontend` and run `npm start`. (Run `npm install` before that if it's the first time)
